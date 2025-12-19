@@ -1,55 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { MessageSquare, Send, User as UserIcon } from 'lucide-react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { MessageSquare, Send, User, Search, ArrowLeft } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
+import { api } from '../utils/api';
 
 export default function Messages() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [newMessage, setNewMessage] = useState('');
-    const [messages, setMessages] = useState([
-        {
-            id: 1,
-            from: 'Mr. Anderson',
-            role: 'Teacher',
-            subject: 'Mathematics',
-            message: 'Great work on your last assignment! Keep it up.',
-            date: '2024-12-01',
-            time: '10:30 AM'
-        },
-        {
-            id: 2,
-            from: 'Ms. Roberts',
-            role: 'Teacher',
-            subject: 'Science',
-            message: 'Please submit your lab report by Friday.',
-            date: '2024-11-30',
-            time: '02:15 PM'
-        },
-        {
-            id: 3,
-            from: 'Principal Office',
-            role: 'Admin',
-            subject: 'General',
-            message: 'Parent-teacher meeting scheduled for next week.',
-            date: '2024-11-28',
-            time: '09:00 AM'
-        },
-    ]);
+    const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const handleSendMessage = (e) => {
+    useEffect(() => {
+        if (user) {
+            loadMessages();
+        }
+    }, [user]);
+
+    const loadMessages = async () => {
+        try {
+            const data = await api.getMessages(user.id, user.role);
+            setMessages(data);
+        } catch (error) {
+            console.error("Failed to load messages", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendMessage = async (e) => {
         e.preventDefault();
         if (newMessage.trim()) {
-            const message = {
-                id: messages.length + 1,
-                from: 'You',
-                role: 'Student',
-                subject: 'General',
+            const msgData = {
+                fromId: user.id,
+                from: user.name,
+                toId: 'ADM001', // Defaulting to Admin for now
+                role: user.role, // Sender role
+                subject: 'General Enquiry',
                 message: newMessage,
                 date: new Date().toISOString().split('T')[0],
                 time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
             };
-            setMessages([message, ...messages]);
-            setNewMessage('');
+
+            try {
+                await api.sendMessage(msgData);
+                setNewMessage('');
+                // Optimistically update or reload
+                // Since getMessages fetches 'toId', and we sent to Admin, it won't appear in our inbox unless we also fetch 'sent' messages.
+                // For this UI, let's just append it locally so user sees they sent it.
+                setMessages([{ ...msgData, id: Date.now() }, ...messages]);
+            } catch (error) {
+                alert("Failed to send message");
+            }
         }
     };
 
@@ -57,44 +60,73 @@ export default function Messages() {
         return <Navigate to="/login" />;
     }
 
+    if (loading) return <LoadingScreen message="Loading Messages..." />;
+
     const getRoleColor = (role) => {
         switch (role) {
             case 'Teacher': return '#3b82f6';
+            case 'admin':
             case 'Admin': return '#8b5cf6';
+            case 'student':
             case 'Student': return '#10b981';
             default: return '#6b7280';
         }
     };
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                <div style={{
-                    width: '64px', height: '64px',
-                    background: 'linear-gradient(135deg, #ec4899, #f472b6)',
-                    borderRadius: '16px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: 'white'
-                }}>
-                    <MessageSquare size={32} />
-                </div>
-                <div>
-                    <h2 style={{ fontSize: '2rem', fontWeight: '700', margin: 0 }}>Messages</h2>
-                    <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)' }}>
-                        {messages.length} conversations
-                    </p>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateX(-3px)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'var(--surface)';
+                            e.currentTarget.style.color = 'var(--primary)';
+                        }}
+                        title="Go Back"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <div>
+                        <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                            Messages & Enquiries
+                        </h2>
+                        <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)' }}>
+                            Contact your teachers or administrator
+                        </p>
+                    </div>
                 </div>
             </div>
 
             {/* Send New Message */}
             <div className="card" style={{ marginBottom: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem' }}>Send New Message</h3>
+                <h3 style={{ marginBottom: '1rem' }}>Send Message to Admin</h3>
                 <form onSubmit={handleSendMessage}>
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <textarea
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Type your message to teachers..."
+                            placeholder="Type your message..."
                             rows="3"
                             style={{
                                 flex: 1,
@@ -115,7 +147,7 @@ export default function Messages() {
 
             {/* Messages List */}
             <div className="card">
-                <h3 style={{ marginBottom: '1.5rem' }}>All Messages</h3>
+                <h3 style={{ marginBottom: '1.5rem' }}>Inbox</h3>
                 {messages.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                         <MessageSquare size={64} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />

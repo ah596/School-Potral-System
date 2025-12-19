@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { storage } from '../../utils/storage';
-import { Plus, Trash2, AlertCircle } from 'lucide-react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { api } from '../../utils/api';
+import { Plus, Trash2, ArrowLeft } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function AdminNotices() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [notices, setNotices] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         title: '',
         content: '',
@@ -14,33 +17,47 @@ export default function AdminNotices() {
     });
 
     useEffect(() => {
-        loadNotices();
+        // Real-time subscription
+        const unsubscribe = api.subscribeToNotices((data) => {
+            setNotices(data);
+            setLoading(false);
+        });
+        return () => unsubscribe();
     }, []);
 
-    const loadNotices = () => {
-        setNotices(storage.getNotices());
-    };
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        storage.addNotice({
-            ...formData,
-            createdBy: user.id
-        });
-        setFormData({ title: '', content: '', priority: 'medium' });
-        loadNotices();
+        try {
+            await api.addNotice({
+                ...formData,
+                authorId: user.id,
+                authorName: user.name || 'School Admin',
+                type: 'global',
+                date: new Date().toISOString().split('T')[0]
+            });
+            setFormData({ title: '', content: '', priority: 'medium' });
+        } catch (error) {
+            console.error("Failed to add notice", error);
+            alert("Failed to add notice");
+        }
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this notice?')) {
-            storage.deleteNotice(id);
-            loadNotices();
+            try {
+                await api.deleteNotice(id);
+            } catch (error) {
+                console.error("Failed to delete notice", error);
+                alert("Failed to delete notice");
+            }
         }
     };
 
     if (!user || user.role !== 'admin') {
         return <Navigate to="/login" />;
     }
+
+    if (loading) return <LoadingScreen message="Loading Notices..." />;
 
     const getPriorityColor = (priority) => {
         switch (priority) {
@@ -52,8 +69,44 @@ export default function AdminNotices() {
     };
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Notice Board Management</h2>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateX(-3px)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'var(--surface)';
+                            e.currentTarget.style.color = 'var(--primary)';
+                        }}
+                        title="Go Back"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                        Notice Board Management
+                    </h2>
+                </div>
+            </div>
 
             <div className="card" style={{ marginBottom: '2rem' }}>
                 <h3 style={{ marginBottom: '1.5rem' }}>Post New Notice</h3>

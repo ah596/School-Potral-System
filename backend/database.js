@@ -112,6 +112,15 @@ async function initializeDatabase() {
         )
     `);
 
+    // Create Password Resets Table
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS password_resets (
+            email TEXT NOT NULL,
+            token TEXT NOT NULL,
+            expires_at DATETIME NOT NULL
+        )
+    `);
+
     // Seed Data if empty
     const userCount = await db.get('SELECT count(*) as count FROM users');
     if (userCount.count === 0) {

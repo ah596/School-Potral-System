@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { initializeDatabase, getDb } = require('./database');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = 5000;
@@ -40,6 +42,90 @@ app.post('/api/login', async (req, res) => {
         } else {
             res.status(401).json({ message: 'Invalid credentials' });
         }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// --- Password Reset Routes ---
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'process.env.EMAIL_USER', // Replace with environment variable or real email
+        pass: 'process.env.EMAIL_PASS'  // Replace with environment variable or real app password
+    }
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    const db = getDb();
+    try {
+        const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+        if (!user) {
+            return res.status(404).json({ message: 'User with this email does not exist' });
+        }
+
+        const token = crypto.randomBytes(20).toString('hex');
+        const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+        // Clean up old tokens
+        await db.run('DELETE FROM password_resets WHERE email = ?', [email]);
+
+        await db.run(
+            'INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)',
+            [email, token, expiresAt.toISOString()]
+        );
+
+        const resetLink = `http://localhost:5173/reset-password?token=${token}`;
+
+        const mailOptions = {
+            from: 'your-school-portal@gmail.com',
+            to: email,
+            subject: 'Password Reset Request',
+            text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
+                `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
+                `${resetLink}\n\n` +
+                `If you did not request this, please ignore this email and your password will remain unchanged.\n`
+        };
+
+        // For demo purposes, we'll log the link
+        console.log('Reset Link:', resetLink);
+
+        try {
+            await transporter.sendMail(mailOptions);
+        } catch (mailError) {
+            console.log("Email service not configured, check console for link");
+        }
+
+        res.json({ message: 'Recovery email sent' });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+    const { token, newPassword } = req.body;
+    const db = getDb();
+    try {
+        const record = await db.get(
+            'SELECT * FROM password_resets WHERE token = ? AND expires_at > ?',
+            [token, new Date().toISOString()]
+        );
+
+        if (!record) {
+            return res.status(400).json({ message: 'Password reset token is invalid or has expired' });
+        }
+
+        await db.run(
+            'UPDATE users SET password = ? WHERE email = ?',
+            [newPassword, record.email]
+        );
+
+        await db.run('DELETE FROM password_resets WHERE email = ?', [record.email]);
+
+        res.json({ message: 'Password updated successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

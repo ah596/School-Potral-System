@@ -1,20 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { storage } from '../../utils/storage';
-import { Lock, Unlock, Eye, Users, Clock, FileText, BookOpen, DollarSign } from 'lucide-react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { api } from '../../utils/api';
+import { Lock, Unlock, Eye, Users, Clock, FileText, BookOpen, DollarSign, ArrowLeft, Loader } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function AdminTeacherView() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [teachers, setTeachers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [selectedTeacher, setSelectedTeacher] = useState(null);
     const [lockedSections, setLockedSections] = useState({});
 
     useEffect(() => {
-        setTeachers(storage.getTeachers());
+        loadData();
         const saved = JSON.parse(localStorage.getItem('admin_teacher_locks') || '{}');
         setLockedSections(saved);
     }, []);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const data = await api.getTeachers();
+            setTeachers(data);
+        } catch (error) {
+            console.error("Failed to load teachers", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const toggleLock = (teacherId, section) => {
         const key = `${teacherId}_${section}`;
@@ -31,6 +46,8 @@ export default function AdminTeacherView() {
         return <Navigate to="/login" />;
     }
 
+    if (loading) return <LoadingScreen message="Loading Teachers..." />;
+
     const sections = [
         { id: 'students', label: 'View Students', icon: Users, color: '#3b82f6' },
         { id: 'attendance', label: 'Mark Attendance', icon: Clock, color: '#10b981' },
@@ -41,8 +58,44 @@ export default function AdminTeacherView() {
     ];
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Teacher Portal Access Control</h2>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateX(-3px)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'var(--surface)';
+                            e.currentTarget.style.color = 'var(--primary)';
+                        }}
+                        title="Go Back"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                        Teacher Portal Access Control
+                    </h2>
+                </div>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
                 {/* Teacher List */}
@@ -76,27 +129,36 @@ export default function AdminTeacherView() {
                         <>
                             <div className="card" style={{ marginBottom: '2rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                                    <div style={{
-                                        width: '64px',
-                                        height: '64px',
-                                        borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: 'white',
-                                        fontSize: '1.5rem',
-                                        fontWeight: '700'
-                                    }}>
-                                        {selectedTeacher.name.charAt(0)}
-                                    </div>
+                                    {selectedTeacher.photo ? (
+                                        <img
+                                            src={selectedTeacher.photo}
+                                            alt={selectedTeacher.name}
+                                            style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)' }}
+                                        />
+                                    ) : (
+                                        <div style={{
+                                            width: '64px',
+                                            height: '64px',
+                                            borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'white',
+                                            fontSize: '1.5rem',
+                                            fontWeight: '700',
+                                            border: '3px solid var(--primary)'
+                                        }}>
+                                            {selectedTeacher.name?.charAt(0)}
+                                        </div>
+                                    )}
                                     <div>
                                         <h3 style={{ margin: 0 }}>{selectedTeacher.name}</h3>
                                         <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)' }}>
                                             {selectedTeacher.id} - {selectedTeacher.subject}
                                         </p>
                                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                            Classes: {(selectedTeacher.classes || []).join(', ')}
+                                            Classes: {(selectedTeacher.classes || selectedTeacher.assignedClasses || []).join(', ')}
                                         </p>
                                     </div>
                                 </div>

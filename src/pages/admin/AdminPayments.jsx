@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { storage } from '../../utils/storage';
-import { DollarSign, Check } from 'lucide-react';
+import { DollarSign, Check, ArrowLeft } from 'lucide-react';
 
 export default function AdminPayments() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [teachers, setTeachers] = useState([]);
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
@@ -29,8 +30,44 @@ export default function AdminPayments() {
     const totalSalaries = teachers.reduce((sum, t) => sum + (parseFloat(t.salary) || 0), 0);
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Teacher Payments</h2>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateX(-3px)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'var(--surface)';
+                            e.currentTarget.style.color = 'var(--primary)';
+                        }}
+                        title="Go Back"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                        Teacher Payments
+                    </h2>
+                </div>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
                 <div className="card" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', color: 'white' }}>

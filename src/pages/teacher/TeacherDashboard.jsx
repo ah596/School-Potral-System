@@ -12,25 +12,36 @@ import {
     Calendar,
     CheckCircle,
     XCircle,
-    Clock
+    Clock,
+    ChevronRight
 } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function TeacherDashboard() {
     const { user } = useAuth();
     const [myAttendance, setMyAttendance] = useState([]);
+    const [assignedClasses, setAssignedClasses] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const fetchAttendance = async () => {
+        const loadDashboardData = async () => {
+            setLoading(true);
             try {
-                const data = await api.getAttendance(user.id);
-                setMyAttendance(data);
+                const [attendanceData, classesData] = await Promise.all([
+                    api.getAttendance(user.id),
+                    api.getTeacherClasses(user.id)
+                ]);
+                setMyAttendance(attendanceData);
+                setAssignedClasses(classesData);
             } catch (error) {
-                console.error('Failed to fetch attendance:', error);
+                console.error('Failed to fetch dashboard data:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
         if (user?.id) {
-            fetchAttendance();
+            loadDashboardData();
         }
     }, [user]);
 
@@ -38,12 +49,16 @@ export default function TeacherDashboard() {
         return <Navigate to="/login" />;
     }
 
+    if (loading) return <LoadingScreen message="Loading Dashboard..." />;
+
     const menuItems = [
+        { to: '/teacher/my-attendance', label: 'My Attendance', icon: Calendar, color: '#6366f1', desc: 'View your attendance record' },
         { to: '/teacher/attendance', label: 'Mark Attendance', icon: ClipboardCheck, color: '#10b981', desc: 'Mark student attendance' },
         { to: '/teacher/marks', label: 'Upload Marks', icon: FileText, color: '#3b82f6', desc: 'Upload student marks' },
         { to: '/teacher/tests', label: 'Test Management', icon: BookOpen, color: '#f59e0b', desc: 'Create and manage tests' },
         { to: '/teacher/assignments', label: 'Assignments', icon: BookOpen, color: '#8b5cf6', desc: 'Manage assignments' },
         { to: '/teacher/students', label: 'View Students', icon: Users, color: '#f97316', desc: 'View student list' },
+        { to: '/teacher/notices', label: 'Class Updates', icon: Mail, color: '#ec4899', desc: 'Post class announcements' },
     ];
 
     // Calculate attendance stats
@@ -53,7 +68,8 @@ export default function TeacherDashboard() {
     const attendancePercentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0' }}></div>
             {/* Teacher Profile Info Box */}
             <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
@@ -68,9 +84,18 @@ export default function TeacherDashboard() {
                         justifyContent: 'center',
                         fontSize: '2.5rem',
                         fontWeight: 'bold',
-                        border: '4px solid rgba(255,255,255,0.3)'
+                        border: '4px solid rgba(255,255,255,0.3)',
+                        overflow: 'hidden'
                     }}>
-                        {user.name.charAt(0)}
+                        {user.photo ? (
+                            <img
+                                src={user.photo}
+                                alt="Profile"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                        ) : (
+                            user.name.charAt(0)
+                        )}
                     </div>
 
                     {/* Info */}
@@ -88,7 +113,7 @@ export default function TeacherDashboard() {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <Users size={18} />
-                                <span>Classes: {(user.classes || []).join(', ')}</span>
+                                <span>Classes: {assignedClasses.length > 0 ? assignedClasses.map(c => `${c.name} (${c.section})`).join(', ') : 'None Assigned'}</span>
                             </div>
                         </div>
                     </div>
@@ -99,47 +124,26 @@ export default function TeacherDashboard() {
                             <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{presentDays}</p>
                             <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Present</p>
                         </div>
-                        <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
+                        <div style={{
+                            textAlign: 'center',
+                            background: absentDays > 5 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255,255,255,0.15)', // Red alert if > 5 absent
+                            padding: '1rem 1.5rem',
+                            borderRadius: '12px',
+                            border: absentDays > 5 ? '2px solid #fecaca' : 'none'
+                        }}>
                             <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{absentDays}</p>
-                            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Absent</p>
+                            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Absent {absentDays > 5 && '(Warning!)'}</p>
                         </div>
                         <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
-                            <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{attendancePercentage}%</p>
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{attendancePercentage}%</p>
+                            </div>
                             <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Attendance</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* My Attendance History */}
-            {myAttendance.length > 0 && (
-                <div className="card" style={{ marginBottom: '2rem' }}>
-                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Calendar size={24} color="var(--primary)" />
-                        My Attendance (Marked by Admin)
-                    </h3>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                        {myAttendance.slice(-14).map((record, index) => (
-                            <div key={index} style={{
-                                padding: '0.75rem 1rem',
-                                borderRadius: 'var(--radius)',
-                                background: record.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                border: `1px solid ${record.status === 'present' ? '#10b981' : '#ef4444'}`,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}>
-                                {record.status === 'present' ? (
-                                    <CheckCircle size={18} color="#10b981" />
-                                ) : (
-                                    <XCircle size={18} color="#ef4444" />
-                                )}
-                                <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{record.date}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
 
             {/* Menu Grid */}
             <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>Quick Actions</h3>
@@ -171,7 +175,8 @@ export default function TeacherDashboard() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: item.color
+                                color: item.color,
+                                flexShrink: 0
                             }}>
                                 <item.icon size={28} />
                             </div>

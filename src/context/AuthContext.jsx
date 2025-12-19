@@ -1,18 +1,25 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { api } from '../utils/api';
+// import { auth } from '../firebase'; // Uncomment when config is ready
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-
-
         // Check for persisted session
-        const savedUser = localStorage.getItem('school_portal_user');
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
+        try {
+            const savedUser = localStorage.getItem('school_portal_user');
+            if (savedUser) {
+                setUser(JSON.parse(savedUser));
+            }
+        } catch (e) {
+            console.error("Auth initialization failed", e);
+            localStorage.removeItem('school_portal_user');
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -31,10 +38,19 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('school_portal_user');
+        // if (auth) auth.signOut(); 
+    };
+
+    const updateUser = (input) => {
+        // Handle both direct updates or functional updates
+        const newUserData = typeof input === 'function' ? input(user) : input;
+        const updatedUser = { ...user, ...newUserData };
+        setUser(updatedUser);
+        localStorage.setItem('school_portal_user', JSON.stringify(updatedUser));
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

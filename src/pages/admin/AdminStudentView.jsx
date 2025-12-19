@@ -1,20 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Navigate, useParams } from 'react-router-dom';
-import { storage } from '../../utils/storage';
-import { Lock, Unlock, Eye, DollarSign, Clock, FileText, BookOpen, Bell, Calendar, MessageSquare } from 'lucide-react';
+import { useNavigate, Navigate, useParams } from 'react-router-dom';
+import { api } from '../../utils/api';
+import { Lock, Unlock, Eye, DollarSign, Clock, FileText, BookOpen, Bell, Calendar, MessageSquare, ArrowLeft, Loader } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function AdminStudentView() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [lockedSections, setLockedSections] = useState({});
 
     useEffect(() => {
-        setStudents(storage.getStudents());
+        loadData();
         const saved = JSON.parse(localStorage.getItem('admin_student_locks') || '{}');
         setLockedSections(saved);
     }, []);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const data = await api.getStudents();
+            setStudents(data);
+        } catch (error) {
+            console.error("Failed to load students", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const toggleLock = (studentId, section) => {
         const key = `${studentId}_${section}`;
@@ -31,6 +46,8 @@ export default function AdminStudentView() {
         return <Navigate to="/login" />;
     }
 
+    if (loading) return <LoadingScreen message="Loading Students..." />;
+
     const sections = [
         { id: 'fees', label: 'Fees Status', icon: DollarSign, color: '#3b82f6' },
         { id: 'attendance', label: 'Attendance', icon: Clock, color: '#10b981' },
@@ -42,8 +59,44 @@ export default function AdminStudentView() {
     ];
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Student Portal Access Control</h2>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateX(-3px)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'var(--surface)';
+                            e.currentTarget.style.color = 'var(--primary)';
+                        }}
+                        title="Go Back"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                        Student Portal Access Control
+                    </h2>
+                </div>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
                 {/* Student List */}

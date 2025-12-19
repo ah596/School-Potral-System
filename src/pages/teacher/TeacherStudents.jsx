@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { storage } from '../../utils/storage';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { ArrowLeft, Users } from 'lucide-react';
 
 export default function TeacherStudents() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [selectedClass, setSelectedClass] = useState(user?.classes?.[0] || '');
     const [students, setStudents] = useState([]);
 
@@ -15,12 +17,48 @@ export default function TeacherStudents() {
     }, [selectedClass]);
 
     if (!user || user.role !== 'teacher') {
-        return <div>Access Denied</div>;
+        return <Navigate to="/login" />;
     }
 
     return (
-        <div className="teacher-students-page container">
-            <h2 className="page-title">My Students</h2>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateX(-3px)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'var(--surface)';
+                            e.currentTarget.style.color = 'var(--primary)';
+                        }}
+                        title="Go Back"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h2 className="page-title" style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                        My Students
+                    </h2>
+                </div>
+            </div>
 
             <div className="class-selector" style={{ marginBottom: '20px' }}>
                 <label style={{ marginRight: '10px', fontWeight: 'bold' }}>Select Class:</label>

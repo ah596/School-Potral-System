@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../utils/api';
-import { Trophy, TrendingUp, Award, Download, FileText } from 'lucide-react';
+import { Trophy, Award, TrendingUp, Download, Eye, ArrowLeft, FileText, Calendar } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Results() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [tests, setTests] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const fetchTests = async () => {
+            setLoading(true);
             try {
                 const allTests = await api.getTests();
                 // Filter tests for this student that have marks
@@ -17,8 +21,11 @@ export default function Results() {
                     test.marks && test.marks[user.id] !== undefined
                 );
                 setTests(myTests);
+                localStorage.setItem(`last_viewed_results_${user.id}`, new Date().toISOString());
             } catch (error) {
                 console.error('Failed to fetch tests:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -30,6 +37,8 @@ export default function Results() {
     if (!user) {
         return <Navigate to="/login" />;
     }
+
+    if (loading) return <LoadingScreen message="Loading Results..." />;
 
     const termResults = [
         {
@@ -81,20 +90,61 @@ export default function Results() {
     };
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Exam Results</h2>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateX(-3px)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'var(--surface)';
+                            e.currentTarget.style.color = 'var(--primary)';
+                        }}
+                        title="Go Back"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                        Exam Results
+                    </h2>
+                </div>
+            </div>
 
             {/* Overall Performance */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div className="performance-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '1.5rem',
+                marginBottom: '2rem'
+            }}>
                 <div className="card" style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)', color: 'white' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{ width: '56px', height: '56px', background: 'rgba(255,255,255,0.2)', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Trophy size={28} />
                         </div>
                         <div>
-                            <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>Current Rank</p>
+                            <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>Tests Attempted</p>
                             <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem', fontWeight: '800' }}>
-                                #{termResults[termResults.length - 1].rank}
+                                {tests.length}
                             </h3>
                         </div>
                     </div>
@@ -106,9 +156,11 @@ export default function Results() {
                             <TrendingUp size={28} />
                         </div>
                         <div>
-                            <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>Average Score</p>
+                            <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>Current Average</p>
                             <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem', fontWeight: '800' }}>
-                                {termResults[termResults.length - 1].average}%
+                                {tests.length > 0
+                                    ? (tests.reduce((acc, t) => acc + (parseInt(t.marks[user.id]) / (t.totalMarks || t.total_marks) * 100), 0) / tests.length).toFixed(1)
+                                    : '0'}%
                             </h3>
                         </div>
                     </div>
@@ -120,55 +172,75 @@ export default function Results() {
                             <Award size={28} />
                         </div>
                         <div>
-                            <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>Overall Grade</p>
-                            <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem', fontWeight: '800' }}>A</h3>
+                            <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>Recent Status</p>
+                            <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem', fontWeight: '800' }}>
+                                {tests.length > 0 ? getGradeFromPercentage(parseInt(tests[0].marks[user.id]) / (tests[0].totalMarks || tests[0].total_marks) * 100) : 'N/A'}
+                            </h3>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Test Marks */}
-            {tests.length > 0 && (
-                <div className="card" style={{ marginBottom: '2rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            {tests.length > 0 ? (
+                <div className="card results-table-card" style={{ marginBottom: '2rem', padding: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '1.5rem',
+                        flexWrap: 'wrap',
+                        gap: '1rem'
+                    }}>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <FileText size={24} color="var(--primary)" />
-                            Test Marks
+                            Academic Test Results
                         </h3>
                     </div>
-                    <div className="table-responsive">
-                        <table className="table">
+                    <div className="table-responsive results-scroll-container">
+                        <table className="table results-table">
                             <thead>
                                 <tr>
-                                    <th>Test Name</th>
-                                    <th>Subject</th>
-                                    <th>Section</th>
-                                    <th>Date</th>
-                                    <th>Marks Obtained</th>
-                                    <th>Total Marks</th>
-                                    <th>Percentage</th>
+                                    <th>Test Details</th>
+                                    <th className="hide-mobile">Subject</th>
+                                    <th className="hide-mobile">Date</th>
+                                    <th>Marks</th>
+                                    <th className="hide-mobile">Total</th>
+                                    <th>%</th>
                                     <th>Grade</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {tests.map(test => {
                                     const marks = parseInt(test.marks[user.id]);
-                                    const percentage = (marks / test.totalMarks) * 100;
+                                    const total = test.totalMarks || test.total_marks;
+                                    const percentage = (marks / total) * 100;
                                     const grade = getGradeFromPercentage(percentage);
 
                                     return (
                                         <tr key={test.id}>
-                                            <td style={{ fontWeight: '600' }}>{test.name}</td>
-                                            <td>{test.subject}</td>
-                                            <td>Section {test.section}</td>
-                                            <td>{test.date}</td>
+                                            <td>
+                                                <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{test.name}</div>
+                                                <div className="show-mobile-only" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                                    {test.subject} • {test.date}
+                                                </div>
+                                            </td>
+                                            <td className="hide-mobile">{test.subject}</td>
+                                            <td className="hide-mobile">{test.date}</td>
                                             <td style={{ fontWeight: '700', color: 'var(--primary)' }}>{marks}</td>
-                                            <td>{test.totalMarks}</td>
-                                            <td>{percentage.toFixed(1)}%</td>
+                                            <td className="hide-mobile" style={{ color: 'var(--text-muted)' }}>{total}</td>
+                                            <td style={{ fontWeight: '600' }}>{percentage.toFixed(0)}%</td>
                                             <td>
                                                 <span className="badge" style={{
-                                                    background: `${getGradeColor(grade)}20`,
-                                                    color: getGradeColor(grade)
+                                                    background: 'transparent',
+                                                    color: getGradeColor(grade),
+                                                    padding: '4px 0',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: '800',
+                                                    minWidth: '35px',
+                                                    textAlign: 'center',
+                                                    border: 'none'
                                                 }}>
                                                     {grade}
                                                 </span>
@@ -180,101 +252,11 @@ export default function Results() {
                         </table>
                     </div>
                 </div>
+            ) : (
+                <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
+                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>No test results available yet.</p>
+                </div>
             )}
-
-            {/* Term Results */}
-            {termResults.map((term, termIndex) => (
-                <div key={termIndex} className="card" style={{ marginBottom: '2rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <div>
-                            <h3 style={{ margin: 0 }}>{term.term}</h3>
-                            <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)' }}>
-                                Rank: #{term.rank} out of {term.totalStudents} students
-                            </p>
-                        </div>
-                        <button className="btn btn-outline btn-sm">
-                            <Download size={16} /> Download Report
-                        </button>
-                    </div>
-
-                    <div className="table-responsive">
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Marks Obtained</th>
-                                    <th>Total Marks</th>
-                                    <th>Percentage</th>
-                                    <th>Grade</th>
-                                    <th>Progress</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {term.subjects.map((subject, index) => (
-                                    <tr key={index}>
-                                        <td style={{ fontWeight: '600' }}>{subject.name}</td>
-                                        <td style={{ fontWeight: '700', color: 'var(--primary)' }}>{subject.marks}</td>
-                                        <td>{subject.total}</td>
-                                        <td>{calculatePercentage(subject.marks, subject.total)}%</td>
-                                        <td>
-                                            <span className="badge" style={{
-                                                background: `${getGradeColor(subject.grade)}20`,
-                                                color: getGradeColor(subject.grade)
-                                            }}>
-                                                {subject.grade}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div style={{ width: '100%', maxWidth: '150px', height: '8px', background: 'var(--background)', borderRadius: '4px', overflow: 'hidden' }}>
-                                                <div style={{
-                                                    width: `${calculatePercentage(subject.marks, subject.total)}%`,
-                                                    height: '100%',
-                                                    background: getGradeColor(subject.grade),
-                                                    transition: 'width 0.3s ease'
-                                                }} />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                <tr style={{ background: 'var(--background)', fontWeight: '700' }}>
-                                    <td>Average</td>
-                                    <td colSpan="2"></td>
-                                    <td style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>{term.average}%</td>
-                                    <td colSpan="2"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            ))}
-
-            {/* Performance Chart */}
-            <div className="card">
-                <h3 style={{ marginBottom: '1.5rem' }}>Performance Trend</h3>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', height: '200px', padding: '1rem', background: 'var(--background)', borderRadius: 'var(--radius)' }}>
-                    {termResults.map((term, index) => (
-                        <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{
-                                width: '100%',
-                                height: `${term.average}%`,
-                                background: 'linear-gradient(to top, var(--primary), var(--secondary))',
-                                borderRadius: '0.5rem',
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                justifyContent: 'center',
-                                padding: '0.5rem',
-                                color: 'white',
-                                fontWeight: '700'
-                            }}>
-                                {term.average}%
-                            </div>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                                {term.term.split(' - ')[0]}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </div>
         </div>
     );
 }

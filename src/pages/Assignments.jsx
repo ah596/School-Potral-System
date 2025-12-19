@@ -1,64 +1,56 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { storage } from '../utils/storage';
-import { BookOpen, CheckCircle, Clock, AlertCircle, Upload } from 'lucide-react';
+import { api } from '../utils/api';
+import { BookOpen, CheckCircle, Clock, AlertCircle, Upload, FileText, Calendar, ArrowLeft } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Assignments() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [assignments, setAssignments] = useState([]);
 
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
-        // Mock assignments data
-        const mockAssignments = [
-            {
-                id: 1,
-                subject: 'Mathematics',
-                title: 'Algebra Problem Set',
-                description: 'Complete exercises 1-20 from Chapter 5',
-                dueDate: '2024-12-15',
-                status: 'pending',
-                marks: 20,
-                submittedDate: null
-            },
-            {
-                id: 2,
-                subject: 'Science',
-                title: 'Physics Lab Report',
-                description: 'Write a detailed report on the pendulum experiment',
-                dueDate: '2024-12-10',
-                status: 'submitted',
-                marks: 25,
-                submittedDate: '2024-12-08',
-                score: 23
-            },
-            {
-                id: 3,
-                subject: 'English',
-                title: 'Essay Writing',
-                description: 'Write an essay on "The Impact of Technology"',
-                dueDate: '2024-12-20',
-                status: 'pending',
-                marks: 30,
-                submittedDate: null
-            },
-            {
-                id: 4,
-                subject: 'History',
-                title: 'World War II Research',
-                description: 'Research and present key events of WWII',
-                dueDate: '2024-11-30',
-                status: 'graded',
-                marks: 20,
-                submittedDate: '2024-11-28',
-                score: 18
-            },
-        ];
-        setAssignments(mockAssignments);
-    }, []);
+        loadData();
+    }, [user]);
+
+    const loadData = async () => {
+        if (!user || (!user.gradeLevel && !user.grade_level)) return;
+
+        try {
+            const studentClass = user.gradeLevel || user.grade_level;
+            const data = await api.getAssignments({ class_name: studentClass });
+
+            // Transform to match UI expectation or update UI
+            // API returns: { title, subject, className, dueDate, message, fileUrl, teacherId, teacherName, createdAt }
+            // UI expects: { status: 'pending' (default for now), ... }
+
+            const formatted = data.map(a => ({
+                ...a,
+                id: a.id,
+                description: a.message,
+                status: 'pending', // Default status for now as we don't track submissions per student yet
+                marks: 100 // Default max marks or add to schema
+            }));
+
+            setAssignments(formatted);
+            localStorage.setItem(`last_viewed_assignments_${user.id}`, new Date().toISOString());
+        } catch (error) {
+            console.error("Failed to load assignments", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    if (loading) {
+        return <LoadingScreen message="Loading Assignments..." />;
     }
 
     const getStatusColor = (status) => {
@@ -86,8 +78,44 @@ export default function Assignments() {
     const gradedCount = assignments.filter(a => a.status === 'graded').length;
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Assignments</h2>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '12px',
+                            background: 'var(--surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateX(-3px)';
+                            e.currentTarget.style.background = 'var(--primary)';
+                            e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.background = 'var(--surface)';
+                            e.currentTarget.style.color = 'var(--primary)';
+                        }}
+                        title="Go Back"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                        Assignments
+                    </h2>
+                </div>
+            </div>
 
             {/* Summary Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -147,7 +175,15 @@ export default function Assignments() {
                                             {assignment.subject}
                                         </span>
                                     </div>
-                                    <p style={{ margin: '0.5rem 0', color: 'var(--text-main)' }}>{assignment.description}</p>
+                                    <p style={{ margin: '0.5rem 0', color: 'var(--text-main)', whiteSpace: 'pre-wrap' }}>{assignment.description}</p>
+
+                                    {assignment.fileUrl && (
+                                        <div style={{ marginBottom: '0.5rem' }}>
+                                            <a href={assignment.fileUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: '500' }}>
+                                                <FileText size={16} /> View Attachment
+                                            </a>
+                                        </div>
+                                    )}
                                     <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                                         <span>Due: <strong>{assignment.dueDate}</strong></span>
                                         <span>Marks: <strong>{assignment.marks}</strong></span>

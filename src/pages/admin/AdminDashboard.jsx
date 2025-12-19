@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [stats, setStats] = useState({ teachers: 0, students: 0, notices: 0 });
 
     useEffect(() => {
@@ -37,11 +37,22 @@ export default function AdminDashboard() {
                 console.error('Failed to fetch stats:', error);
             }
         };
-        fetchStats();
-    }, []);
+        // Only fetch if auth is loaded and user is admin
+        if (!authLoading && user?.role === 'admin') {
+            fetchStats();
+        }
+    }, [authLoading, user]);
+
+    if (authLoading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0f172a', color: 'white' }}>
+                <h2>Initializing Session...</h2>
+            </div>
+        );
+    }
 
     if (!user || user.role !== 'admin') {
-        return <Navigate to="/login" />;
+        return <Navigate to="/login" replace />;
     }
 
     const menuItems = [
@@ -52,6 +63,7 @@ export default function AdminDashboard() {
         { to: '/admin/student-access', label: 'Student Access Control', icon: Users, color: 'linear-gradient(135deg, #ec4899, #f472b6)', desc: 'Lock/unlock student sections' },
         { to: '/admin/teacher-access', label: 'Teacher Access Control', icon: Users, color: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', desc: 'Lock/unlock teacher sections' },
         { to: '/admin/notices', label: 'Notice Board', icon: Bell, color: 'linear-gradient(135deg, #ef4444, #f87171)', desc: 'Post announcements' },
+        { to: '/admin/fees', label: 'Student Fees', icon: DollarSign, color: 'linear-gradient(135deg, #10b981, #34d399)', desc: 'Manage fees & challans' },
         { to: '/admin/payments', label: 'Teacher Payments', icon: DollarSign, color: 'linear-gradient(135deg, #f59e0b, #fbbf24)', desc: 'Manage salaries' },
         { to: '/admin/reports', label: 'Reports', icon: BarChart3, color: 'linear-gradient(135deg, #06b6d4, #22d3ee)', desc: 'View analytics' },
     ];
@@ -62,6 +74,7 @@ export default function AdminDashboard() {
             <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
                     {/* Avatar */}
+                    {/* Avatar */}
                     <div style={{
                         width: '100px',
                         height: '100px',
@@ -70,9 +83,18 @@ export default function AdminDashboard() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        border: '4px solid rgba(255,255,255,0.3)'
+                        border: '4px solid rgba(255,255,255,0.3)',
+                        overflow: 'hidden'
                     }}>
-                        <Shield size={48} />
+                        {user.photo ? (
+                            <img
+                                src={user.photo}
+                                alt="Profile"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                        ) : (
+                            <Shield size={48} />
+                        )}
                     </div>
 
                     {/* Info */}
@@ -115,6 +137,29 @@ export default function AdminDashboard() {
                             <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Notices</p>
                         </div>
                     </div>
+                </div>
+
+                {/* Sync Button */}
+                <div style={{ marginTop: '1.5rem', width: '100%', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '1.5rem' }}>
+                    <button className="btn"
+                        style={{ background: 'rgba(255,255,255,0.2)', color: 'white', width: '100%', border: 'none' }}
+                        onClick={async () => {
+                            const btn = document.activeElement;
+                            btn.innerText = "Syncing... (This may take a moment)";
+                            try {
+                                const res = await api.syncUsersToAuth();
+                                alert(`Sync Complete!\n\nSuccess: ${res.created} new accounts created.\nExisting/Skipped: ${res.errors} (Likely already exist).\nTotal Scanned: ${res.total}`);
+                            } catch (e) {
+                                alert("Sync Failed: " + e.message);
+                            }
+                            btn.innerText = "Sync All Logins to Firebase Auth";
+                        }}
+                    >
+                        Sync All Logins to Firebase Auth
+                    </button>
+                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', opacity: 0.7, textAlign: 'center' }}>
+                        Click this if users complain they can't reset passwords.
+                    </p>
                 </div>
             </div>
 
@@ -161,6 +206,6 @@ export default function AdminDashboard() {
                     </Link>
                 ))}
             </div>
-        </div>
+        </div >
     );
 }

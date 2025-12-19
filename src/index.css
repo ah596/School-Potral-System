@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
 :root {
   /* Premium Color Palette */
   --primary: #6366f1;
@@ -116,7 +118,7 @@
   background: var(--surface);
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
 
 * {
   margin: 0;
@@ -477,7 +479,6 @@ ul {
   gap: 1.25rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
 }
 
 .menu-card:hover {
@@ -486,21 +487,6 @@ ul {
   border-color: transparent;
 }
 
-.menu-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: currentColor;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.menu-card:hover::before {
-  opacity: 1;
-}
 
 .menu-icon {
   width: 56px;
@@ -514,7 +500,7 @@ ul {
 }
 
 .menu-card:hover .menu-icon {
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.05);
 }
 
 .menu-label {
@@ -590,6 +576,34 @@ ul {
 
 .table tr:last-child td {
   border-bottom: none;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: var(--text-light);
+}
+
+.show-mobile-only {
+  display: none;
 }
 
 /* Mobile Navigation Styles */
@@ -684,5 +698,35 @@ ul {
 
   .mobile-login-btn {
     display: inline-flex;
+  }
+
+  .header-stats-card {
+    display: none !important;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .show-mobile-only {
+    display: block !important;
+  }
+
+  .performance-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
   }
 }
