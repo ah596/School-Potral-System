@@ -50,9 +50,29 @@ export default function Profile() {
         e.preventDefault();
         try {
             let photoUrl = formData.photo;
+
             if (selectedFile) {
-                const roleFolder = user.role === 'teacher' ? 'teachers' : user.role === 'student' ? 'students' : 'admins';
-                photoUrl = await api.uploadFile(selectedFile, `${roleFolder}/${user.id}_${Date.now()}`);
+                // Convert to Base64 for direct database storage (bypassing Storage bucket for simplicity)
+                // Limit size to 1MB to respect Firestore limits
+                if (selectedFile.size > 1024 * 1024) {
+                    alert("Image too large. Please choose an image under 1MB.");
+                    return;
+                }
+
+                const toBase64 = (file) => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
+
+                try {
+                    photoUrl = await toBase64(selectedFile);
+                } catch (e) {
+                    console.error("File reading failed", e);
+                    alert("Failed to read file.");
+                    return;
+                }
             }
 
             const updatedData = { ...formData, photo: photoUrl };
@@ -63,12 +83,12 @@ export default function Profile() {
             // Update Local Context immediately so Dashboard reflects it
             updateUser(updatedData);
 
-
             alert("Profile Updated Successfully!");
             setIsEditing(false);
+            setSelectedFile(null); // Reset file
         } catch (error) {
             console.error("Update failed", error);
-            alert("Failed to update profile");
+            alert("Failed to update profile: " + error.message);
         }
     };
 
