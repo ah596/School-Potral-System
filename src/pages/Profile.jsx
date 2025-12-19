@@ -195,11 +195,11 @@ export default function Profile() {
                     <p style={{ margin: '0 0 1rem 0', color: 'var(--text-muted)', fontSize: '1.1rem' }}>
                         {user.role === 'student' ? user.gradeLevel : user.role === 'teacher' ? user.subject : 'Administrator'}
                     </p>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                        <span className="badge" style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1rem' }}>
                             {user.role === 'student' ? 'Student' : user.role === 'teacher' ? 'Teacher' : 'Admin'}
                         </span>
-                        <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
+                        <span style={{ color: 'var(--success)', fontWeight: 'bold', fontSize: '1rem' }}>
                             Active
                         </span>
                     </div>
