@@ -58,18 +58,26 @@ export default function AdminDashboard() {
 
     const handleSyncUsers = async (e) => {
         e.preventDefault();
-        const btn = e.currentTarget;
-        const originalText = btn.querySelector('h4').innerText;
-        btn.querySelector('h4').innerText = 'Syncing...';
-        btn.style.pointerEvents = 'none';
+        const card = e.currentTarget;
+        const h4Element = card.querySelector('h4');
+
+        if (!h4Element) return;
+
+        const originalText = h4Element.innerText;
+        h4Element.innerText = 'Syncing...';
+        card.style.pointerEvents = 'none';
+        card.style.opacity = '0.6';
+
         try {
             const res = await api.syncUsersToAuth();
             alert(`Sync Complete!\n\nSuccess: ${res.created} new accounts created.\nExisting/Skipped: ${res.errors}`);
         } catch (error) {
             alert("Sync Failed: " + error.message);
         }
-        btn.querySelector('h4').innerText = originalText;
-        btn.style.pointerEvents = 'auto';
+
+        h4Element.innerText = originalText;
+        card.style.pointerEvents = 'auto';
+        card.style.opacity = '1';
     };
 
     const menuItems = [
