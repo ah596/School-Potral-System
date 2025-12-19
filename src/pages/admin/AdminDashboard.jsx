@@ -13,12 +13,14 @@ import {
     Mail,
     Shield,
     Calendar,
-    Clock
+    Clock,
+    RefreshCw
 } from 'lucide-react';
 
 export default function AdminDashboard() {
     const { user, loading: authLoading } = useAuth();
     const [stats, setStats] = useState({ teachers: 0, students: 0, notices: 0 });
+    const [isSyncing, setIsSyncing] = useState(false);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -37,11 +39,23 @@ export default function AdminDashboard() {
                 console.error('Failed to fetch stats:', error);
             }
         };
-        // Only fetch if auth is loaded and user is admin
+
         if (!authLoading && user?.role === 'admin') {
             fetchStats();
         }
     }, [authLoading, user]);
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        try {
+            const res = await api.syncUsersToAuth();
+            alert(`Sync Complete!\n\nSuccess: ${res.created} new accounts created.\nExisting/Skipped: ${res.errors}`);
+        } catch (e) {
+            alert("Sync Failed: " + e.message);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     if (authLoading) {
         return (
@@ -73,7 +87,6 @@ export default function AdminDashboard() {
             <style>{`
                 @media (max-width: 768px) {
                     .admin-extra-info { display: none !important; }
-                    .admin-sync-card { display: none !important; }
                     .admin-header-flex { gap: 1rem !important; flex-wrap: wrap !important; }
                     .admin-profile-section { flex: 1; display: flex !important; align-items: center !important; gap: 1rem !important; width: 100% !important; }
                     .admin-avatar { width: 80px !important; height: 80px !important; }
@@ -84,11 +97,14 @@ export default function AdminDashboard() {
                     .admin-stat-card p:first-child { font-size: 1.5rem !important; }
                     .admin-stat-card p:last-child { font-size: 0.75rem !important; }
                 }
+                .spin { animation: spin 2s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             `}</style>
 
             {/* Admin Profile Info Box */}
             <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white' }}>
                 <div className="admin-header-flex" style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
+
                     {/* Profile Section (Avatar + Name/ID) */}
                     <div className="admin-profile-section" style={{ display: 'flex', alignItems: 'center', gap: '2rem', flex: 1 }}>
                         {/* Avatar */}
@@ -127,12 +143,8 @@ export default function AdminDashboard() {
                                     Administrator
                                 </span>
                             </div>
-                            <p className="admin-extra-info" style={{ margin: '0.5rem 0', opacity: 0.9 }}>School Management Portal</p>
+                            <p className="admin-extra-info" style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '0.9rem' }}>School Management Portal</p>
                             <div className="admin-extra-info" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '1rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <BookOpen size={18} />
-                                    <span>ID: {user.id}</span>
-                                </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Mail size={18} />
                                     <span>{user.email || `${user.id.toLowerCase()}@school.com`}</span>
@@ -161,27 +173,6 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div>
-
-                {/* Sync Button */}
-                <div className="admin-sync-card" style={{ marginTop: '1.5rem', width: '100%', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '1.5rem' }}>
-                    <button className="btn"
-                        style={{ background: 'rgba(255,255,255,0.2)', color: 'white', width: '100%', border: 'none' }}
-                        onClick={async () => {
-                            const btn = document.activeElement;
-                            const originalText = btn.innerText;
-                            btn.innerText = "Syncing...";
-                            try {
-                                const res = await api.syncUsersToAuth();
-                                alert(`Sync Complete!\n\nSuccess: ${res.created} new accounts created.\nExisting/Skipped: ${res.errors}`);
-                            } catch (e) {
-                                alert("Sync Failed: " + e.message);
-                            }
-                            btn.innerText = originalText;
-                        }}
-                    >
-                        Sync All Logins to Firebase Auth
-                    </button>
-                </div>
             </div>
 
             {/* Menu Grid */}
@@ -194,6 +185,7 @@ export default function AdminDashboard() {
                             alignItems: 'center',
                             gap: '1rem',
                             padding: '1.5rem',
+                            height: '100%',
                             transition: 'transform 0.2s, box-shadow 0.2s',
                             cursor: 'pointer',
                             border: '1px solid var(--border)'
@@ -214,7 +206,8 @@ export default function AdminDashboard() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                flexShrink: 0
                             }}>
                                 <item.icon size={28} color="white" />
                             </div>
@@ -226,7 +219,54 @@ export default function AdminDashboard() {
                         </div>
                     </Link>
                 ))}
+
+                {/* Sync Feature Card */}
+                <div className="card"
+                    onClick={handleSync}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        padding: '1.5rem',
+                        height: '100%',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        cursor: 'pointer',
+                        border: '1px solid var(--border)',
+                        opacity: isSyncing ? 0.7 : 1,
+                        pointerEvents: isSyncing ? 'none' : 'auto'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                    }}>
+                    <div style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                        flexShrink: 0
+                    }}>
+                        <RefreshCw size={28} color="white" className={isSyncing ? 'spin' : ''} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                            {isSyncing ? 'Syncing...' : 'Sync Logins'}
+                        </h4>
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            Update authentication records
+                        </p>
+                    </div>
+                    <ChevronRight size={20} color="var(--text-muted)" />
+                </div>
             </div>
-        </div >
+        </div>
     );
 }
