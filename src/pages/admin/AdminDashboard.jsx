@@ -74,10 +74,12 @@ export default function AdminDashboard() {
                 @media (max-width: 768px) {
                     .admin-extra-info { display: none !important; }
                     .admin-sync-card { display: none !important; }
-                    .admin-header-flex { gap: 1rem !important; flex-direction: column; align-items: flex-start !important; }
-                    .admin-profile-info { min-width: unset !important; }
-                    .admin-welcome-text { fontSize: 1.5rem !important; }
-                    .admin-stats-flex { width: 100%; justify-content: space-between; }
+                    .admin-header-flex { gap: 1rem !important; flex-wrap: wrap !important; }
+                    .admin-profile-section { flex: 1; display: flex !important; align-items: center !important; gap: 1rem !important; width: 100% !important; }
+                    .admin-avatar { width: 80px !important; height: 80px !important; }
+                    .admin-welcome-text { fontSize: 1.25rem !important; line-height: 1.2 !important; margin-bottom: 0.25rem !important; }
+                    .admin-id-badge { display: flex !important; font-size: 0.85rem !important; opacity: 0.9 !important; }
+                    .admin-stats-flex { width: 100%; justify-content: space-between; margin-top: 0.5rem; }
                     .admin-stat-card { flex: 1; padding: 0.75rem !important; min-width: 80px; }
                     .admin-stat-card p:first-child { font-size: 1.5rem !important; }
                     .admin-stat-card p:last-child { font-size: 0.75rem !important; }
@@ -87,51 +89,58 @@ export default function AdminDashboard() {
             {/* Admin Profile Info Box */}
             <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white' }}>
                 <div className="admin-header-flex" style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
-                    {/* Avatar */}
-                    <div style={{
-                        width: '100px',
-                        height: '100px',
-                        borderRadius: '24px',
-                        background: 'rgba(255,255,255,0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '4px solid rgba(255,255,255,0.3)',
-                        overflow: 'hidden',
-                        flexShrink: 0
-                    }}>
-                        {user.photo ? (
-                            <img
-                                src={user.photo}
-                                alt="Profile"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                        ) : (
-                            <Shield size={48} />
-                        )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="admin-profile-info" style={{ flex: 1, minWidth: '200px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                            <h2 className="admin-welcome-text" style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800' }}>Welcome, {user.name}!</h2>
-                            <span className="admin-extra-info" style={{ background: 'rgba(255,255,255,0.2)', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.85rem' }}>
-                                Administrator
-                            </span>
+                    {/* Profile Section (Avatar + Name/ID) */}
+                    <div className="admin-profile-section" style={{ display: 'flex', alignItems: 'center', gap: '2rem', flex: 1 }}>
+                        {/* Avatar */}
+                        <div className="admin-avatar" style={{
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '24px',
+                            background: 'rgba(255,255,255,0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '4px solid rgba(255,255,255,0.3)',
+                            overflow: 'hidden',
+                            flexShrink: 0
+                        }}>
+                            {user.photo ? (
+                                <img
+                                    src={user.photo}
+                                    alt="Profile"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            ) : (
+                                <Shield size={40} />
+                            )}
                         </div>
-                        <p className="admin-extra-info" style={{ margin: '0.5rem 0', opacity: 0.9 }}>School Management Portal</p>
-                        <div className="admin-extra-info" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <BookOpen size={18} />
-                                <span>ID: {user.id}</span>
+
+                        {/* Info */}
+                        <div className="admin-profile-info" style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <h2 className="admin-welcome-text" style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800' }}>Welcome, {user.name}!</h2>
+                                <div className="admin-id-badge" style={{ display: 'none', alignItems: 'center', gap: '0.5rem' }}>
+                                    <BookOpen size={16} />
+                                    <span style={{ fontWeight: '600' }}>ID: {user.id}</span>
+                                </div>
+                                <span className="admin-extra-info" style={{ background: 'rgba(255,255,255,0.2)', padding: '0.2rem 0.6rem', borderRadius: '10px', fontSize: '0.8rem', width: 'fit-content', marginTop: '0.5rem' }}>
+                                    Administrator
+                                </span>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Mail size={18} />
-                                <span>{user.email || `${user.id.toLowerCase()}@school.com`}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Calendar size={18} />
-                                <span>Since 2018</span>
+                            <p className="admin-extra-info" style={{ margin: '0.5rem 0', opacity: 0.9 }}>School Management Portal</p>
+                            <div className="admin-extra-info" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <BookOpen size={18} />
+                                    <span>ID: {user.id}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Mail size={18} />
+                                    <span>{user.email || `${user.id.toLowerCase()}@school.com`}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Calendar size={18} />
+                                    <span>Since 2018</span>
+                                </div>
                             </div>
                         </div>
                     </div>
