@@ -69,11 +69,24 @@ export default function AdminDashboard() {
     ];
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
+        <div className="container" style={{ padding: '2rem 1rem' }}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .admin-extra-info { display: none !important; }
+                    .admin-sync-card { display: none !important; }
+                    .admin-header-flex { gap: 1rem !important; flex-direction: column; align-items: flex-start !important; }
+                    .admin-profile-info { min-width: unset !important; }
+                    .admin-welcome-text { fontSize: 1.5rem !important; }
+                    .admin-stats-flex { width: 100%; justify-content: space-between; }
+                    .admin-stat-card { flex: 1; padding: 0.75rem !important; min-width: 80px; }
+                    .admin-stat-card p:first-child { font-size: 1.5rem !important; }
+                    .admin-stat-card p:last-child { font-size: 0.75rem !important; }
+                }
+            `}</style>
+
             {/* Admin Profile Info Box */}
             <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
-                    {/* Avatar */}
+                <div className="admin-header-flex" style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
                     {/* Avatar */}
                     <div style={{
                         width: '100px',
@@ -84,7 +97,8 @@ export default function AdminDashboard() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         border: '4px solid rgba(255,255,255,0.3)',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        flexShrink: 0
                     }}>
                         {user.photo ? (
                             <img
@@ -98,15 +112,15 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Info */}
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                            <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800' }}>Welcome, {user.name}!</h2>
-                            <span style={{ background: 'rgba(255,255,255,0.2)', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.85rem' }}>
+                    <div className="admin-profile-info" style={{ flex: 1, minWidth: '200px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                            <h2 className="admin-welcome-text" style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800' }}>Welcome, {user.name}!</h2>
+                            <span className="admin-extra-info" style={{ background: 'rgba(255,255,255,0.2)', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.85rem' }}>
                                 Administrator
                             </span>
                         </div>
-                        <p style={{ margin: '0.5rem 0', opacity: 0.9 }}>School Management Portal</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '1rem' }}>
+                        <p className="admin-extra-info" style={{ margin: '0.5rem 0', opacity: 0.9 }}>School Management Portal</p>
+                        <div className="admin-extra-info" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <BookOpen size={18} />
                                 <span>ID: {user.id}</span>
@@ -123,16 +137,16 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Stats */}
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
+                    <div className="admin-stats-flex" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <div className="admin-stat-card" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
                             <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{stats.teachers}</p>
                             <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Teachers</p>
                         </div>
-                        <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
+                        <div className="admin-stat-card" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
                             <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{stats.students}</p>
                             <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Students</p>
                         </div>
-                        <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
+                        <div className="admin-stat-card" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
                             <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{stats.notices}</p>
                             <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Notices</p>
                         </div>
@@ -140,26 +154,24 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Sync Button */}
-                <div style={{ marginTop: '1.5rem', width: '100%', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '1.5rem' }}>
+                <div className="admin-sync-card" style={{ marginTop: '1.5rem', width: '100%', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '1.5rem' }}>
                     <button className="btn"
                         style={{ background: 'rgba(255,255,255,0.2)', color: 'white', width: '100%', border: 'none' }}
                         onClick={async () => {
                             const btn = document.activeElement;
-                            btn.innerText = "Syncing... (This may take a moment)";
+                            const originalText = btn.innerText;
+                            btn.innerText = "Syncing...";
                             try {
                                 const res = await api.syncUsersToAuth();
-                                alert(`Sync Complete!\n\nSuccess: ${res.created} new accounts created.\nExisting/Skipped: ${res.errors} (Likely already exist).\nTotal Scanned: ${res.total}`);
+                                alert(`Sync Complete!\n\nSuccess: ${res.created} new accounts created.\nExisting/Skipped: ${res.errors}`);
                             } catch (e) {
                                 alert("Sync Failed: " + e.message);
                             }
-                            btn.innerText = "Sync All Logins to Firebase Auth";
+                            btn.innerText = originalText;
                         }}
                     >
                         Sync All Logins to Firebase Auth
                     </button>
-                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', opacity: 0.7, textAlign: 'center' }}>
-                        Click this if users complain they can't reset passwords.
-                    </p>
                 </div>
             </div>
 
