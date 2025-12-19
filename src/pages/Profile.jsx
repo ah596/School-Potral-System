@@ -88,7 +88,6 @@ export default function Profile() {
             // Update Local Context immediately so Dashboard reflects it
             updateUser(updatedData);
 
-            alert("Profile Updated Successfully!");
             setIsEditing(false);
             setSelectedFile(null); // Reset file
         } catch (error) {
