@@ -263,7 +263,7 @@ export default function AdminClasses() {
                                     <tr key={cls.id}>
                                         <td style={{ fontWeight: '600' }}>{cls.name}</td>
                                         <td>
-                                            <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
+                                            <span className="badge" style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>
                                                 {cls.section}
                                             </span>
                                         </td>
@@ -318,7 +318,7 @@ export default function AdminClasses() {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                     <div>
                                         <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', fontWeight: '700' }}>{cls.name}</h4>
-                                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                                        <span className="badge" style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', fontSize: '0.8rem' }}>
                                             Section {cls.section}
                                         </span>
                                     </div>

@@ -20,7 +20,6 @@ import {
 export default function AdminDashboard() {
     const { user, loading: authLoading } = useAuth();
     const [stats, setStats] = useState({ teachers: 0, students: 0, notices: 0 });
-    const [isSyncing, setIsSyncing] = useState(false);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -39,23 +38,11 @@ export default function AdminDashboard() {
                 console.error('Failed to fetch stats:', error);
             }
         };
-
+        // Only fetch if auth is loaded and user is admin
         if (!authLoading && user?.role === 'admin') {
             fetchStats();
         }
     }, [authLoading, user]);
-
-    const handleSync = async () => {
-        setIsSyncing(true);
-        try {
-            const res = await api.syncUsersToAuth();
-            alert(`Sync Complete!\n\nSuccess: ${res.created} new accounts created.\nExisting/Skipped: ${res.errors}`);
-        } catch (e) {
-            alert("Sync Failed: " + e.message);
-        } finally {
-            setIsSyncing(false);
-        }
-    };
 
     if (authLoading) {
         return (
@@ -69,6 +56,22 @@ export default function AdminDashboard() {
         return <Navigate to="/login" replace />;
     }
 
+    const handleSyncUsers = async (e) => {
+        e.preventDefault();
+        const btn = e.currentTarget;
+        const originalText = btn.querySelector('h4').innerText;
+        btn.querySelector('h4').innerText = 'Syncing...';
+        btn.style.pointerEvents = 'none';
+        try {
+            const res = await api.syncUsersToAuth();
+            alert(`Sync Complete!\n\nSuccess: ${res.created} new accounts created.\nExisting/Skipped: ${res.errors}`);
+        } catch (error) {
+            alert("Sync Failed: " + error.message);
+        }
+        btn.querySelector('h4').innerText = originalText;
+        btn.style.pointerEvents = 'auto';
+    };
+
     const menuItems = [
         { to: '/admin/classes', label: 'Manage Classes', icon: BookOpen, color: 'linear-gradient(135deg, #06b6d4, #22d3ee)', desc: 'Create and manage classes' },
         { to: '/admin/teachers', label: 'Manage Teachers', icon: Users, color: 'linear-gradient(135deg, #3b82f6, #60a5fa)', desc: 'Add, edit, assign classes' },
@@ -80,6 +83,7 @@ export default function AdminDashboard() {
         { to: '/admin/fees', label: 'Student Fees', icon: DollarSign, color: 'linear-gradient(135deg, #10b981, #34d399)', desc: 'Manage fees & challans' },
         { to: '/admin/payments', label: 'Teacher Payments', icon: DollarSign, color: 'linear-gradient(135deg, #f59e0b, #fbbf24)', desc: 'Manage salaries' },
         { to: '/admin/reports', label: 'Reports', icon: BarChart3, color: 'linear-gradient(135deg, #06b6d4, #22d3ee)', desc: 'View analytics' },
+        { onClick: handleSyncUsers, label: 'Sync User Logins', icon: RefreshCw, color: 'linear-gradient(135deg, #6366f1, #8b5cf6)', desc: 'Sync all users to Firebase Auth', isAction: true },
     ];
 
     return (
@@ -87,6 +91,7 @@ export default function AdminDashboard() {
             <style>{`
                 @media (max-width: 768px) {
                     .admin-extra-info { display: none !important; }
+                    .admin-sync-card { display: none !important; }
                     .admin-header-flex { gap: 1rem !important; flex-wrap: wrap !important; }
                     .admin-profile-section { flex: 1; display: flex !important; align-items: center !important; gap: 1rem !important; width: 100% !important; }
                     .admin-avatar { width: 80px !important; height: 80px !important; }
@@ -97,14 +102,11 @@ export default function AdminDashboard() {
                     .admin-stat-card p:first-child { font-size: 1.5rem !important; }
                     .admin-stat-card p:last-child { font-size: 0.75rem !important; }
                 }
-                .spin { animation: spin 2s linear infinite; }
-                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             `}</style>
 
             {/* Admin Profile Info Box */}
             <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white' }}>
                 <div className="admin-header-flex" style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
-
                     {/* Profile Section (Avatar + Name/ID) */}
                     <div className="admin-profile-section" style={{ display: 'flex', alignItems: 'center', gap: '2rem', flex: 1 }}>
                         {/* Avatar */}
@@ -143,8 +145,12 @@ export default function AdminDashboard() {
                                     Administrator
                                 </span>
                             </div>
-                            <p className="admin-extra-info" style={{ margin: '0.5rem 0', opacity: 0.9, fontSize: '0.9rem' }}>School Management Portal</p>
+                            <p className="admin-extra-info" style={{ margin: '0.5rem 0', opacity: 0.9 }}>School Management Portal</p>
                             <div className="admin-extra-info" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <BookOpen size={18} />
+                                    <span>ID: {user.id}</span>
+                                </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Mail size={18} />
                                     <span>{user.email || `${user.id.toLowerCase()}@school.com`}</span>
@@ -173,100 +179,60 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div>
+
+
             </div>
 
             {/* Menu Grid */}
             <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>Admin Panel</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-                {menuItems.map((item) => (
-                    <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}>
-                        <div className="card" style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '1rem',
-                            padding: '1.5rem',
-                            height: '100%',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            cursor: 'pointer',
-                            border: '1px solid var(--border)'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-                            }}>
-                            <div style={{
-                                width: '56px',
-                                height: '56px',
-                                borderRadius: '12px',
-                                background: item.color,
+                {menuItems.map((item, index) => {
+                    const Component = item.isAction ? 'div' : Link;
+                    const componentProps = item.isAction
+                        ? { onClick: item.onClick, style: { textDecoration: 'none', cursor: 'pointer' } }
+                        : { to: item.to, style: { textDecoration: 'none' } };
+
+                    return (
+                        <Component key={item.to || index} {...componentProps}>
+                            <div className="card" style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                flexShrink: 0
-                            }}>
-                                <item.icon size={28} color="white" />
+                                gap: '1rem',
+                                padding: '1.5rem',
+                                transition: 'transform 0.2s, box-shadow 0.2s',
+                                cursor: 'pointer',
+                                border: '1px solid var(--border)'
+                            }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                                }}>
+                                <div style={{
+                                    width: '56px',
+                                    height: '56px',
+                                    borderRadius: '12px',
+                                    background: item.color,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                }}>
+                                    <item.icon size={28} color="white" />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)' }}>{item.label}</h4>
+                                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{item.desc}</p>
+                                </div>
+                                <ChevronRight size={20} color="var(--text-muted)" />
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)' }}>{item.label}</h4>
-                                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{item.desc}</p>
-                            </div>
-                            <ChevronRight size={20} color="var(--text-muted)" />
-                        </div>
-                    </Link>
-                ))}
-
-                {/* Sync Feature Card */}
-                <div className="card"
-                    onClick={handleSync}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '1rem',
-                        padding: '1.5rem',
-                        height: '100%',
-                        transition: 'transform 0.2s, box-shadow 0.2s',
-                        cursor: 'pointer',
-                        border: '1px solid var(--border)',
-                        opacity: isSyncing ? 0.7 : 1,
-                        pointerEvents: isSyncing ? 'none' : 'auto'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)';
-                        e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-                    }}>
-                    <div style={{
-                        width: '56px',
-                        height: '56px',
-                        borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
-                        flexShrink: 0
-                    }}>
-                        <RefreshCw size={28} color="white" className={isSyncing ? 'spin' : ''} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                            {isSyncing ? 'Syncing...' : 'Sync Logins'}
-                        </h4>
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            Update authentication records
-                        </p>
-                    </div>
-                    <ChevronRight size={20} color="var(--text-muted)" />
-                </div>
+                        </Component>
+                    );
+                })}
             </div>
-        </div>
+        </div >
     );
 }
