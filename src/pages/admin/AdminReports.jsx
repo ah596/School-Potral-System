@@ -177,7 +177,7 @@ export default function AdminReports() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                             <Clock size={24} color="var(--primary)" />
-                            <h3 style={{ margin: 0, fontWeight: '700' }}>Engagement Timeline</h3>
+                            <h3 style={{ margin: 0, fontWeight: '700' }}>Timeline</h3>
                         </div>
 
                         <div style={{ display: 'flex', background: 'var(--background)', padding: '0.25rem', borderRadius: '10px' }}>
