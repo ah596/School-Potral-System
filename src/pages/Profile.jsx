@@ -99,7 +99,7 @@ export default function Profile() {
         }
     };
 
-    if (isSaving) return <LoadingScreen message="Saving changes..." />;
+    if (isSaving) return <LoadingScreen message="Uploading your profile picture and saving changes..." />;
 
     return (
         <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
