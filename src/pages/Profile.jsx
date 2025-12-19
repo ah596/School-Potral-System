@@ -7,12 +7,14 @@ import {
     Calendar, User, Save, X, ArrowLeft,
     Award, Briefcase, GraduationCap
 } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Profile() {
     const { user, updateUser } = useAuth();
     const navigate = useNavigate();
     const isRestricted = user && ['student', 'teacher'].includes(user.role);
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [formData, setFormData] = useState({});
 
@@ -48,6 +50,7 @@ export default function Profile() {
 
     const handleSave = async (e) => {
         e.preventDefault();
+        setIsSaving(true);
         try {
             let photoUrl = formData.photo;
 
@@ -56,6 +59,7 @@ export default function Profile() {
                 // Limit size to 1MB to respect Firestore limits
                 if (selectedFile.size > 1024 * 1024) {
                     alert("Image too large. Please choose an image under 1MB.");
+                    setIsSaving(false);
                     return;
                 }
 
@@ -71,6 +75,7 @@ export default function Profile() {
                 } catch (e) {
                     console.error("File reading failed", e);
                     alert("Failed to read file.");
+                    setIsSaving(false);
                     return;
                 }
             }
@@ -89,8 +94,12 @@ export default function Profile() {
         } catch (error) {
             console.error("Update failed", error);
             alert("Failed to update profile: " + error.message);
+        } finally {
+            setIsSaving(false);
         }
     };
+
+    if (isSaving) return <LoadingScreen message="Saving changes..." />;
 
     return (
         <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
