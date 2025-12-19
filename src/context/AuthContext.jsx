@@ -9,15 +9,15 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for persisted session
+        // Check for persisted session in sessionStorage
         try {
-            const savedUser = localStorage.getItem('school_portal_user');
+            const savedUser = sessionStorage.getItem('school_portal_user');
             if (savedUser) {
                 setUser(JSON.parse(savedUser));
             }
         } catch (e) {
             console.error("Auth initialization failed", e);
-            localStorage.removeItem('school_portal_user');
+            sessionStorage.removeItem('school_portal_user');
         } finally {
             setLoading(false);
         }
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const userData = await api.login(id, password);
             setUser(userData);
-            localStorage.setItem('school_portal_user', JSON.stringify(userData));
+            sessionStorage.setItem('school_portal_user', JSON.stringify(userData));
             return true;
         } catch (error) {
             console.error('Login failed:', error);
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         setUser(null);
-        localStorage.removeItem('school_portal_user');
+        sessionStorage.removeItem('school_portal_user');
         // if (auth) auth.signOut(); 
     };
 
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         const newUserData = typeof input === 'function' ? input(user) : input;
         const updatedUser = { ...user, ...newUserData };
         setUser(updatedUser);
-        localStorage.setItem('school_portal_user', JSON.stringify(updatedUser));
+        sessionStorage.setItem('school_portal_user', JSON.stringify(updatedUser));
     };
 
     return (
