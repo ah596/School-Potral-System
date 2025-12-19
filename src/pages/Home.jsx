@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
+        // Wait for auth to finish loading before redirecting
+        if (loading) return;
+
         // Redirect based on user role or to login if not authenticated
         if (user) {
             if (user.role === 'admin') {
@@ -19,7 +22,7 @@ export default function Home() {
         } else {
             navigate('/login', { replace: true });
         }
-    }, [user, navigate]);
+    }, [user, loading, navigate]);
 
     return (
         <div style={{
@@ -30,7 +33,7 @@ export default function Home() {
             background: 'var(--background)',
             color: 'var(--text)'
         }}>
-            <h2>Loading...</h2>
+            <h2>Redirecting...</h2>
         </div>
     );
 }
