@@ -89,17 +89,17 @@ export default function Login() {
                     
                     .campus-card {
                         flex: 1;
-                        height: 600px; /* Fixed height for Campus Updates */
+                        height: 640px; /* Increased to ensure Login card starts at same visual height */
                     }
 
                     .login-form-card {
                         flex: 1;
-                        min-height: 600px; /* Start at same height */
+                        min-height: 640px; /* Start at same height */
                         height: auto; /* Allow growth */
                     }
 
                     .campus-scroll-area {
-                        max-height: 600px;
+                        max-height: 640px;
                     }
                 }
 
