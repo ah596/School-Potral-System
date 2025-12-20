@@ -50,33 +50,54 @@ export default function Login() {
                 .login-container {
                     min-height: 100vh;
                     display: flex;
-                    align-items: stretch; /* Stretch to make equal height */
+                    align-items: stretch;
                     justify-content: center;
                     background: var(--background);
                     padding: 2rem 1rem;
                     gap: 2rem;
                 }
+                
+                .campus-card, .login-form-card {
+                    width: 100%;
+                    max-width: 420px;
+                    padding: 1.5rem;
+                    border-radius: var(--radius);
+                    box-shadow: var(--shadow-md);
+                    border: 1px solid var(--border);
+                    background: var(--surface);
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .login-form-card {
+                    padding: 2.5rem;
+                    box-shadow: var(--shadow-lg);
+                }
+
+                @media (min-width: 969px) {
+                    .campus-card, .login-form-card {
+                        flex: 1;
+                        min-height: 600px;
+                    }
+                }
+
+                @media (max-width: 968px) {
                     .login-container {
                         flex-direction: column;
-                        align-items: center; /* Center on mobile */
+                        align-items: center;
+                    }
+                    .campus-card {
+                        max-height: 450px;
+                    }
+                    /* Ensure Login Card has natural height on mobile */
+                    .login-form-card {
+                        height: auto;
                     }
                 }
             `}</style>
 
             {/* Campus Update Board Card */}
-            <div className="card" style={{
-                width: '100%',
-                maxWidth: '420px',
-                flex: '1', /* Allow stretching */
-                minHeight: '600px', /* Consistent minimum height */
-                padding: '1.5rem',
-                display: 'flex',
-                flexDirection: 'column',
-                background: 'var(--surface)',
-                borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow-md)',
-                border: '1px solid var(--border)'
-            }}>
+            <div className="campus-card">
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -160,19 +181,7 @@ export default function Login() {
             </div>
 
             {/* Login Form Card */}
-            <div className="login-card" style={{
-                width: '100%',
-                maxWidth: '420px',
-                flex: '1', /* Allow stretching */
-                minHeight: '600px', /* Consistent minimum height */
-                padding: '2.5rem',
-                background: 'var(--surface)',
-                borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow-lg)',
-                border: '1px solid var(--border)',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
+            <div className="login-form-card">
                 <div className="login-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
                         <div style={{
