@@ -87,7 +87,8 @@ export default function Login() {
                         align-items: center;
                     }
                     .campus-card {
-                        max-height: 450px;
+                        /* Let it grow naturally */
+                        height: auto;
                     }
                     /* Ensure Login Card has natural height on mobile */
                     .login-form-card {
@@ -117,7 +118,7 @@ export default function Login() {
                     <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold' }}>Campus Updates</h3>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
+                <div style={{ flex: 1, paddingRight: '0.25rem' }}>
                     {selectedNotice ? (
                         <div className="notice-detail animate-fade-in">
                             <button
