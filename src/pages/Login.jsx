@@ -77,7 +77,11 @@ export default function Login() {
                 @media (min-width: 969px) {
                     .campus-card, .login-form-card {
                         flex: 1;
-                        height: 600px; /* Increased height to accommodate taller buttons */
+                        min-height: 600px;
+                        height: auto; /* Allow growth for errors/content */
+                    }
+                    .campus-scroll-area {
+                        max-height: 600px; /* Prevent updates from blowing up height */
                     }
                 }
 
@@ -119,7 +123,7 @@ export default function Login() {
                     <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold' }}>Campus Updates</h3>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
+                <div className="campus-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
                     {selectedNotice ? (
                         <div className="notice-detail animate-fade-in">
                             <button
