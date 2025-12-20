@@ -77,7 +77,7 @@ export default function Login() {
                 @media (min-width: 969px) {
                     .campus-card, .login-form-card {
                         flex: 1;
-                        min-height: 600px;
+                        height: 450px; /* Fixed height for scrolling content */
                     }
                 }
 
