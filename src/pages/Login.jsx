@@ -1,16 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { api } from '../utils/api';
+import { LogIn, Bell, ShieldCheck, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
     const [id, setId] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [notices, setNotices] = useState([]);
+    const [selectedNotice, setSelectedNotice] = useState(null);
     const [showDemo, setShowDemo] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const unsubscribe = api.subscribeToNotices((data) => {
+            setNotices(data);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -25,45 +35,152 @@ export default function Login() {
         }
     };
 
+    const getPriorityColor = (priority) => {
+        switch (priority) {
+            case 'high': return '#ef4444';
+            case 'medium': return '#f59e0b';
+            case 'low': return '#10b981';
+            default: return '#6b7280';
+        }
+    };
+
     return (
         <div className="login-container">
             <style>{`
                 .login-container {
                     min-height: 100vh;
                     display: flex;
-                    align-items: center;
+                    align-items: stretch;
                     justify-content: center;
                     background: var(--background);
-                    padding: 1rem;
+                    padding: 2rem 1rem;
+                    gap: 2rem;
                 }
                 
-                .login-form-card {
+                .campus-card, .login-form-card {
                     width: 100%;
                     max-width: 420px;
-                    padding: 2.5rem;
+                    padding: 1.5rem;
                     border-radius: var(--radius);
-                    box-shadow: var(--shadow-lg);
+                    box-shadow: var(--shadow-md);
                     border: 1px solid var(--border);
                     background: var(--surface);
                     display: flex;
                     flex-direction: column;
                 }
                 
-                .animate-fade-in {
-                    animation: fadeIn 0.3s ease-in;
-                }
-                
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-5px); }
-                    to { opacity: 1; transform: translateY(0); }
+                .login-form-card {
+                    padding: 2.5rem;
+                    box-shadow: var(--shadow-lg);
                 }
 
-                @media (max-width: 480px) {
+                @media (min-width: 969px) {
+                    .campus-card, .login-form-card {
+                        flex: 1;
+                        min-height: 600px;
+                    }
+                }
+
+                @media (max-width: 968px) {
+                    .login-container {
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    .campus-card {
+                        max-height: 450px; /* Constrain height to keep it small */
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    /* Ensure Login Card has natural height on mobile */
                     .login-form-card {
-                        padding: 1.5rem;
+                        height: auto;
                     }
                 }
             `}</style>
+
+            {/* Campus Update Board Card */}
+            <div className="campus-card">
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    marginBottom: '1rem',
+                    paddingBottom: '0.75rem',
+                    borderBottom: '1px solid var(--border)'
+                }}>
+                    <div style={{
+                        padding: '0.5rem',
+                        background: 'rgba(99, 102, 241, 0.1)',
+                        borderRadius: '50%',
+                        color: 'var(--primary)'
+                    }}>
+                        <Bell size={20} />
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold' }}>Campus Updates</h3>
+                </div>
+
+                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
+                    {selectedNotice ? (
+                        <div className="notice-detail animate-fade-in">
+                            <button
+                                onClick={() => setSelectedNotice(null)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                    background: 'transparent', border: 'none',
+                                    color: 'var(--text-muted)', cursor: 'pointer',
+                                    marginBottom: '1rem', fontSize: '0.9rem', fontWeight: '500'
+                                }}
+                            >
+                                <ArrowLeft size={16} /> Back to Updates
+                            </button>
+
+                            <div style={{ borderLeft: `3px solid ${getPriorityColor(selectedNotice.priority)}`, paddingLeft: '1rem' }}>
+                                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>{selectedNotice.title}</h4>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>
+                                    {selectedNotice.date}
+                                </span>
+                                <p style={{ fontSize: '0.95rem', lineHeight: '1.6', whiteSpace: 'pre-wrap', color: 'var(--text-main)' }}>
+                                    {selectedNotice.content}
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {notices.length === 0 ? (
+                                <p style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                    No updates available.
+                                </p>
+                            ) : (
+                                notices.map((notice) => (
+                                    <div
+                                        key={notice.id}
+                                        onClick={() => setSelectedNotice(notice)}
+                                        style={{
+                                            padding: '0.75rem',
+                                            background: 'var(--background)',
+                                            borderRadius: '0.5rem',
+                                            cursor: 'pointer',
+                                            borderLeft: `3px solid ${getPriorityColor(notice.priority)}`,
+                                            transition: 'all 0.2s',
+                                            border: '1px solid transparent',
+                                            borderLeftWidth: '3px'
+                                        }}
+                                        className="notice-item-hover"
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.05)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'var(--background)'}
+                                    >
+                                        <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--text-main)' }}>{notice.title}</h5>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{notice.date}</span>
+                                            <span style={{ fontSize: '0.75rem', color: '#6366f1', fontWeight: '500' }}>Read More</span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* Login Form Card */}
             <div className="login-form-card">
