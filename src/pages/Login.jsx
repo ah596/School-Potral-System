@@ -44,21 +44,28 @@ export default function Login() {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--background)',
-            padding: '2rem 1rem'
-        }}>
+        <div className="login-container">
+            <style>{`
+                .login-container {
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: var(--background);
+                    padding: 2rem 1rem;
+                    gap: 2rem;
+                }
+                @media (max-width: 968px) {
+                    .login-container {
+                        flex-direction: column;
+                    }
+                }
+            `}</style>
 
             {/* Campus Update Board Card */}
             <div className="card" style={{
                 width: '100%',
                 maxWidth: '420px',
-                marginBottom: '1.5rem',
                 padding: '1.5rem',
                 maxHeight: '400px',
                 display: 'flex',
