@@ -77,7 +77,7 @@ export default function Login() {
                 @media (min-width: 969px) {
                     .campus-card, .login-form-card {
                         flex: 1;
-                        height: 450px; /* Fixed height for scrolling content */
+                        height: 600px; /* Increased height to accommodate taller buttons */
                     }
                 }
 
@@ -271,7 +271,7 @@ export default function Login() {
                             </button>
                         </div>
                     </div>
-                    <button type="submit" className="btn btn-primary btn-block" style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none', borderRadius: 'var(--radius)', color: 'white', fontWeight: 'bold', cursor: 'pointer', background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
+                    <button type="submit" className="btn btn-primary btn-block" style={{ width: '100%', padding: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none', borderRadius: 'var(--radius)', color: 'white', fontWeight: 'bold', cursor: 'pointer', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', fontSize: '1.05rem' }}>
                         <LogIn className="icon-sm" size={18} />
                         <span>Sign In</span>
                     </button>
@@ -280,7 +280,7 @@ export default function Login() {
                 <div style={{ marginTop: 'auto', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <button
                         onClick={() => setShowDemo(!showDemo)}
-                        style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600', textDecoration: 'underline' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '1rem', fontWeight: '600', textDecoration: 'underline', padding: '0.75rem' }}
                     >
                         {showDemo ? 'Hide Login Info' : 'Show Login Info'}
                     </button>
