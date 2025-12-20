@@ -11,6 +11,7 @@ export default function Login() {
     const [error, setError] = useState('');
     const [notices, setNotices] = useState([]);
     const [selectedNotice, setSelectedNotice] = useState(null);
+    const [showDemo, setShowDemo] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -49,7 +50,7 @@ export default function Login() {
                 .login-container {
                     min-height: 100vh;
                     display: flex;
-                    align-items: center;
+                    align-items: stretch; /* Stretch to make equal height */
                     justify-content: center;
                     background: var(--background);
                     padding: 2rem 1rem;
@@ -58,6 +59,7 @@ export default function Login() {
                 @media (max-width: 968px) {
                     .login-container {
                         flex-direction: column;
+                        align-items: center; /* Center on mobile */
                     }
                 }
             `}</style>
@@ -66,8 +68,9 @@ export default function Login() {
             <div className="card" style={{
                 width: '100%',
                 maxWidth: '420px',
+                flex: '1', /* Allow stretching */
+                minHeight: '600px', /* Consistent minimum height */
                 padding: '1.5rem',
-                maxHeight: '400px',
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'var(--surface)',
@@ -161,11 +164,15 @@ export default function Login() {
             <div className="login-card" style={{
                 width: '100%',
                 maxWidth: '420px',
+                flex: '1', /* Allow stretching */
+                minHeight: '600px', /* Consistent minimum height */
                 padding: '2.5rem',
                 background: 'var(--surface)',
                 borderRadius: 'var(--radius)',
                 boxShadow: 'var(--shadow-lg)',
-                border: '1px solid var(--border)'
+                border: '1px solid var(--border)',
+                display: 'flex',
+                flexDirection: 'column'
             }}>
                 <div className="login-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
@@ -260,16 +267,27 @@ export default function Login() {
                     </button>
                 </form>
 
-                <div className="demo-credentials" style={{ marginTop: '2rem', padding: '1rem', background: 'var(--background)', borderRadius: 'var(--radius)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', border: '1px dashed var(--border)' }}>
-                    <p style={{ marginBottom: '0.5rem', fontWeight: '600' }}>Demo Credentials:</p>
-                    <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                        <span>Student: <strong>STU001</strong></span>
-                        <span>Teacher: <strong>TCH001</strong></span>
-                    </div>
-                    <div style={{ textAlign: 'center', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                        Admin: <strong>ADM001</strong>
-                    </div>
-                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', textAlign: 'center' }}>Password: <strong>password123</strong> (for Student/Teacher) | <strong>admin123</strong> (for Admin)</div>
+                <div style={{ marginTop: 'auto', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <button
+                        onClick={() => setShowDemo(!showDemo)}
+                        style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600', textDecoration: 'underline' }}
+                    >
+                        {showDemo ? 'Hide Login Info' : 'Show Login Info'}
+                    </button>
+
+                    {showDemo && (
+                        <div className="demo-credentials animate-fade-in" style={{ marginTop: '1rem', padding: '1rem', background: 'var(--background)', borderRadius: 'var(--radius)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', border: '1px dashed var(--border)', width: '100%' }}>
+                            <p style={{ marginBottom: '0.5rem', fontWeight: '600' }}>Demo Credentials:</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                                <span>Student: <strong>STU001</strong></span>
+                                <span>Teacher: <strong>TCH001</strong></span>
+                            </div>
+                            <div style={{ textAlign: 'center', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                                Admin: <strong>ADM001</strong>
+                            </div>
+                            <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', textAlign: 'center' }}>Password: <strong>password123</strong> (for Student/Teacher) | <strong>admin123</strong> (for Admin)</div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
