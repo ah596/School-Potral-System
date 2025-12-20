@@ -56,11 +56,18 @@ export default function Login() {
                     padding: 2rem 1rem;
                     gap: 2rem;
                 }
-                @media (max-width: 968px) {
                     .login-container {
                         flex-direction: column;
                         align-items: center; /* Center on mobile */
                     }
+                }
+                /* Hide Scrollbar but keep functionality */
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .no-scrollbar {
+                    -ms-overflow-style: none;  /* IE and Edge */
+                    scrollbar-width: none;  /* Firefox */
                 }
             `}</style>
 
@@ -97,7 +104,7 @@ export default function Login() {
                     <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold' }}>Campus Updates</h3>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
+                <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
                     {selectedNotice ? (
                         <div className="notice-detail animate-fade-in">
                             <button
