@@ -4,6 +4,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { Trophy, Award, TrendingUp, Download, Eye, ArrowLeft, FileText, Calendar } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import FeatureLocked from '../components/FeatureLocked';
 
 export default function Results() {
     const { user } = useAuth();
@@ -36,6 +37,11 @@ export default function Results() {
 
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    const studentLocks = JSON.parse(localStorage.getItem('admin_student_locks') || '{}');
+    if (studentLocks[`${user.id}_results`]) {
+        return <FeatureLocked featureName="Results" />;
     }
 
     if (loading) return <LoadingScreen message="Loading Results..." />;

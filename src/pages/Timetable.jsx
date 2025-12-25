@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Clock, BookOpen, Calendar, MapPin, User, ArrowLeft } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import FeatureLocked from '../components/FeatureLocked';
 import { api } from '../utils/api';
 
 const DEFAULT_TIMETABLE = {
@@ -87,6 +88,11 @@ export default function Timetable() {
 
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    const studentLocks = JSON.parse(localStorage.getItem('admin_student_locks') || '{}');
+    if (studentLocks[`${user.id}_timetable`]) {
+        return <FeatureLocked featureName="Timetable" />;
     }
 
     const getSubjectColor = (subject) => {

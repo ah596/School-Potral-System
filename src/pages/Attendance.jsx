@@ -4,6 +4,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { CheckCircle, XCircle, Clock, Calendar, Users, ArrowLeft, TrendingUp, Award } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import FeatureLocked from '../components/FeatureLocked';
 
 export default function Attendance() {
     const { user } = useAuth();
@@ -30,6 +31,11 @@ export default function Attendance() {
 
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    const studentLocks = JSON.parse(localStorage.getItem('admin_student_locks') || '{}');
+    if (studentLocks[`${user.id}_attendance`]) {
+        return <FeatureLocked featureName="Attendance" />;
     }
 
     if (loading) return <LoadingScreen message="Loading attendance records..." />;

@@ -5,6 +5,7 @@ import { storage } from '../utils/storage';
 import { api } from '../utils/api';
 import { BookOpen, CheckCircle, Clock, AlertCircle, Upload, FileText, Calendar, ArrowLeft } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import FeatureLocked from '../components/FeatureLocked';
 
 export default function Assignments() {
     const { user } = useAuth();
@@ -47,6 +48,11 @@ export default function Assignments() {
 
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    const studentLocks = JSON.parse(localStorage.getItem('admin_student_locks') || '{}');
+    if (studentLocks[`${user.id}_assignments`]) {
+        return <FeatureLocked featureName="Assignments" />;
     }
 
     if (loading) {

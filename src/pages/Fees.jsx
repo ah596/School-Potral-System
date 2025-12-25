@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { DollarSign, CheckCircle, AlertCircle, CreditCard, ArrowLeft } from 'lucide-react';
+import { DollarSign, CheckCircle, AlertCircle, CreditCard, ArrowLeft, Download } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import FeatureLocked from '../components/FeatureLocked';
 import { api } from '../utils/api';
 
 export default function Fees() {
@@ -36,6 +37,11 @@ export default function Fees() {
 
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    const studentLocks = JSON.parse(localStorage.getItem('admin_student_locks') || '{}');
+    if (studentLocks[`${user.id}_fees`]) {
+        return <FeatureLocked featureName="Fees Status" />;
     }
 
     const upcomingPayments = [

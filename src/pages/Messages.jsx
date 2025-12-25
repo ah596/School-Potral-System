@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { MessageSquare, Send, User, Search, ArrowLeft } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import FeatureLocked from '../components/FeatureLocked';
 import { api } from '../utils/api';
 
 export default function Messages() {
@@ -58,6 +59,11 @@ export default function Messages() {
 
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    const studentLocks = JSON.parse(localStorage.getItem('admin_student_locks') || '{}');
+    if (user.role && user.role.toLowerCase() === 'student' && studentLocks[`${user.id}_messages`]) {
+        return <FeatureLocked featureName="Messages" />;
     }
 
     if (loading) return <LoadingScreen message="Loading Messages..." />;
@@ -183,7 +189,7 @@ export default function Messages() {
                                             justifyContent: 'center',
                                             color: getRoleColor(msg.role)
                                         }}>
-                                            <UserIcon size={24} />
+                                            <User size={24} />
                                         </div>
                                         <div>
                                             <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>{msg.from}</h4>

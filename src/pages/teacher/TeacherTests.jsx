@@ -4,6 +4,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../../utils/api';
 import { Plus, Edit2, Trash2, Save, X, BookOpen, Clock, CheckCircle, ArrowLeft, FileText } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
+import FeatureLocked from '../../components/FeatureLocked';
 
 export default function TeacherTests() {
     const { user } = useAuth();
@@ -186,6 +187,11 @@ export default function TeacherTests() {
 
     if (!user || user.role !== 'teacher') {
         return <Navigate to="/login" />;
+    }
+
+    const teacherLocks = user ? JSON.parse(localStorage.getItem('admin_teacher_locks') || '{}') : {};
+    if (user && teacherLocks[`${user.id}_tests`]) {
+        return <FeatureLocked featureName="Test Management" />;
     }
 
     if (loading) return <LoadingScreen message={loadingMessage || 'Loading Tests...'} />;

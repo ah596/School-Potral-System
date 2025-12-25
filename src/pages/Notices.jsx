@@ -4,6 +4,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { Bell, AlertCircle, Info, CheckCircle, ArrowLeft } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import FeatureLocked from '../components/FeatureLocked';
 
 export default function Notices() {
     const { user } = useAuth();
@@ -28,6 +29,11 @@ export default function Notices() {
 
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    const studentLocks = JSON.parse(localStorage.getItem('admin_student_locks') || '{}');
+    if (studentLocks[`${user.id}_notices`]) {
+        return <FeatureLocked featureName="Notices" />;
     }
 
     if (loading) return <LoadingScreen message="Loading Updates..." />;

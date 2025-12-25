@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { storage } from '../../utils/storage';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { ArrowLeft, Users } from 'lucide-react';
+import FeatureLocked from '../../components/FeatureLocked';
 
 export default function TeacherStudents() {
     const { user } = useAuth();
@@ -18,6 +19,11 @@ export default function TeacherStudents() {
 
     if (!user || user.role !== 'teacher') {
         return <Navigate to="/login" />;
+    }
+
+    const teacherLocks = JSON.parse(localStorage.getItem('admin_teacher_locks') || '{}');
+    if (teacherLocks[`${user.id}_students`]) {
+        return <FeatureLocked featureName="View Students" />;
     }
 
     return (

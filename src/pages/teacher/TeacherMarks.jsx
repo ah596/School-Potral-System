@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import { Save, X, Edit2, Trash2, ArrowLeft, AlertCircle } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
+import FeatureLocked from '../../components/FeatureLocked';
 
 export default function TeacherMarks() {
     const { user } = useAuth();
@@ -233,6 +234,11 @@ export default function TeacherMarks() {
     };
 
     // Only show full-screen loading for save/update operations
+    const teacherLocks = user ? JSON.parse(localStorage.getItem('admin_teacher_locks') || '{}') : {};
+    if (user && teacherLocks[`${user.id}_marks`]) {
+        return <FeatureLocked featureName="Upload Marks" />;
+    }
+
     if (loading) return <LoadingScreen message={loadingMessage} />;
 
     const currentTest = tests.find(t => t.id === selectedTestId);

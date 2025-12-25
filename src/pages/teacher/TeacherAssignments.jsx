@@ -4,6 +4,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../../utils/api';
 import { BookOpen, FileText, Plus, Trash2, ArrowLeft, Calendar, Upload, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
+import FeatureLocked from '../../components/FeatureLocked';
 
 export default function TeacherAssignments() {
     const { user } = useAuth();
@@ -129,6 +130,11 @@ export default function TeacherAssignments() {
             alert("Failed to delete");
         }
     };
+
+    const teacherLocks = user ? JSON.parse(localStorage.getItem('admin_teacher_locks') || '{}') : {};
+    if (user && teacherLocks[`${user.id}_assignments`]) {
+        return <FeatureLocked featureName="Assignments" />;
+    }
 
     if (loading) return <LoadingScreen message="Loading Assignments..." />;
 

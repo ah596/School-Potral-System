@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import { CheckCircle, XCircle, Clock, Calendar, Users, History, ArrowLeft } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
+import FeatureLocked from '../../components/FeatureLocked';
 
 export default function TeacherAttendance() {
     const { user } = useAuth();
@@ -135,6 +136,11 @@ export default function TeacherAttendance() {
     });
     const presentToday = todaysRecords.filter(r => r.status === 'present').length;
     const absentToday = todaysRecords.filter(r => r.status === 'absent').length;
+
+    const teacherLocks = user ? JSON.parse(localStorage.getItem('admin_teacher_locks') || '{}') : {};
+    if (user && teacherLocks[`${user.id}_attendance`]) {
+        return <FeatureLocked featureName="Mark Attendance" />;
+    }
 
     if (loading) return <LoadingScreen message="Loading Attendance Data..." />;
 
