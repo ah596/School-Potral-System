@@ -20,7 +20,6 @@ export default function AdminTeachers() {
     const [selectedFile, setSelectedFile] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [formData, setFormData] = useState({
-
         id: '',
         name: '',
         subject: '',
@@ -31,6 +30,7 @@ export default function AdminTeachers() {
         salary: '',
         password: 'password123'
     });
+    const [emailError, setEmailError] = useState('');
 
     useEffect(() => {
         loadData();
@@ -64,6 +64,7 @@ export default function AdminTeachers() {
 
     const handleAdd = () => {
         setIsAdding(true);
+        setEmailError('');
         setFormData({
             id: `TCH${String(teachers.length + 1).padStart(3, '0')}`,
             name: '',
@@ -79,6 +80,7 @@ export default function AdminTeachers() {
     const handleEdit = (teacher) => {
         setEditingId(teacher.id);
         setFormData({ ...teacher, classes: teacher.classes || [] });
+        setEmailError('');
     };
 
     const handleSave = async () => {
@@ -88,7 +90,21 @@ export default function AdminTeachers() {
         }
 
         setIsSaving(true);
+        setEmailError('');
         try {
+            // Check for duplicate email
+            if (!formData.email) {
+                setEmailError("Email is required");
+                setIsSaving(false);
+                return;
+            }
+            const emailExists = await api.checkEmailExists(formData.email, isAdding ? null : formData.id);
+            if (emailExists) {
+                setEmailError("This email is already registered. Kindly use another email.");
+                setIsSaving(false);
+                return;
+            }
+
             let photoUrl = formData.photo;
 
             if (selectedFile) {
@@ -265,7 +281,7 @@ export default function AdminTeachers() {
                             />
                         </div>
                         <div className="form-group">
-                            <label>Name</label>
+                            <label>Name <span style={{ color: 'red' }}>*</span></label>
                             <input
                                 type="text"
                                 value={formData.name}
@@ -281,12 +297,17 @@ export default function AdminTeachers() {
                             />
                         </div>
                         <div className="form-group">
-                            <label>Email</label>
+                            <label>Email <span style={{ color: 'red' }}>*</span></label>
                             <input
                                 type="email"
                                 value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                onChange={(e) => {
+                                    setFormData({ ...formData, email: e.target.value });
+                                    if (emailError) setEmailError('');
+                                }}
+                                style={{ borderColor: emailError ? '#ef4444' : 'var(--border)' }}
                             />
+                            {emailError && <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.4rem', fontWeight: '500' }}>{emailError}</p>}
                         </div>
                         <div className="form-group">
                             <label>Phone</label>

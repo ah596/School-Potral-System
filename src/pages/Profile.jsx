@@ -17,6 +17,7 @@ export default function Profile() {
     const [isSaving, setIsSaving] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [formData, setFormData] = useState({});
+    const [emailError, setEmailError] = useState('');
 
 
     if (!user) {
@@ -32,6 +33,7 @@ export default function Profile() {
             photo: user.photo || '' // Start with existing photo
         });
         setIsEditing(true);
+        setEmailError('');
     };
 
     const handleImageChange = (e) => {
@@ -51,7 +53,16 @@ export default function Profile() {
     const handleSave = async (e) => {
         e.preventDefault();
         setIsSaving(true);
+        setEmailError('');
         try {
+            // Check uniqueness
+            const emailExists = await api.checkEmailExists(formData.email, user.id);
+            if (emailExists) {
+                setEmailError("This email is already registered. Kindly use another email.");
+                setIsSaving(false);
+                return;
+            }
+
             let photoUrl = formData.photo;
 
             if (selectedFile) {
@@ -334,7 +345,7 @@ export default function Profile() {
 
                             {!isRestricted && (
                                 <div className="form-group">
-                                    <label>Full Name</label>
+                                    <label>Full Name <span style={{ color: 'red' }}>*</span></label>
                                     <input
                                         type="text"
                                         value={formData.name}
@@ -345,13 +356,18 @@ export default function Profile() {
                             )}
 
                             <div className="form-group">
-                                <label>Email</label>
+                                <label>Email <span style={{ color: 'red' }}>*</span></label>
                                 <input
                                     type="email"
                                     value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, email: e.target.value });
+                                        if (emailError) setEmailError('');
+                                    }}
                                     required
+                                    style={{ borderColor: emailError ? '#ef4444' : 'var(--border)' }}
                                 />
+                                {emailError && <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.4rem', fontWeight: '500' }}>{emailError}</p>}
                             </div>
                             <div className="form-group">
                                 <label>Phone</label>

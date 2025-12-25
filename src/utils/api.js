@@ -107,6 +107,23 @@ export const api = {
         return { id, ...data };
     },
 
+    checkEmailExists: async (email, excludeId = null) => {
+        if (!email) return false;
+        const q = query(collection(db, 'users'), where('email', '==', email));
+        const snap = await getDocs(q);
+
+        if (snap.empty) return false;
+
+        // If specific user to exclude (for updates)
+        if (excludeId) {
+            // Check if any doc ID is NOT the excludeId
+            const otherUser = snap.docs.find(doc => doc.id !== excludeId);
+            return !!otherUser;
+        }
+
+        return true;
+    },
+
     uploadFile: async (file, path) => {
         if (!file) return null;
         try {

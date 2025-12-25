@@ -19,7 +19,6 @@ export default function AdminStudents() {
 
     const [selectedFile, setSelectedFile] = useState(null);
     const [formData, setFormData] = useState({
-
         id: '',
         name: '',
         gradeLevel: '',
@@ -28,6 +27,7 @@ export default function AdminStudents() {
         photo: '',
         password: 'password123'
     });
+    const [emailError, setEmailError] = useState('');
 
 
     const [loading, setLoading] = useState(false);
@@ -66,6 +66,7 @@ export default function AdminStudents() {
             return;
         }
         setIsAdding(true);
+        setEmailError('');
 
         // Enhanced ID Generation Logic
         const numberMap = {
@@ -130,16 +131,26 @@ export default function AdminStudents() {
     const handleEdit = (student) => {
         setEditingId(student.id);
         setFormData(student);
+        setEmailError('');
     };
 
     const handleSave = async () => {
-        if (!formData.name || !formData.id) {
-            alert("Name and ID are required");
+        if (!formData.name || !formData.id || !formData.email) {
+            alert("Name, ID, and Email are required");
             return;
         }
 
         setIsSaving(true);
+        setEmailError('');
         try {
+            // Check for duplicate email
+            const emailExists = await api.checkEmailExists(formData.email, isAdding ? null : formData.id);
+            if (emailExists) {
+                setEmailError("This email is already registered. Kindly use another email.");
+                setIsSaving(false);
+                return;
+            }
+
             let photoUrl = formData.photo;
 
             if (selectedFile) {
@@ -510,7 +521,7 @@ export default function AdminStudents() {
                             />
                         </div>
                         <div className="form-group">
-                            <label>Name</label>
+                            <label>Name <span style={{ color: 'red' }}>*</span></label>
                             <input
                                 type="text"
                                 value={formData.name}
@@ -542,13 +553,18 @@ export default function AdminStudents() {
                             )}
                         </div>
                         <div className="form-group">
-                            <label>Email (for Login)</label>
+                            <label>Email (for Login) <span style={{ color: 'red' }}>*</span></label>
                             <input
                                 type="email"
                                 value={formData.email || ''}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                onChange={(e) => {
+                                    setFormData({ ...formData, email: e.target.value });
+                                    if (emailError) setEmailError('');
+                                }}
                                 placeholder="student@school.com"
+                                style={{ borderColor: emailError ? '#ef4444' : 'var(--border)' }}
                             />
+                            {emailError && <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.4rem', fontWeight: '500' }}>{emailError}</p>}
                         </div>
                         <div className="form-group">
                             <label>Phone</label>
