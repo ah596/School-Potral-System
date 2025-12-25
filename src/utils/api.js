@@ -51,6 +51,13 @@ export const api = {
                 if (userData.email) {
                     try {
                         const userCredential = await signInWithEmailAndPassword(auth, userData.email, password);
+
+                        // Sync password if it changed (e.g. via Forgot Password link)
+                        if (userData.password !== password) {
+                            await updateDoc(userRef, { password: password });
+                            userData.password = password;
+                        }
+
                         return { ...userData, uid: userCredential.user.uid };
                     } catch (e) {
                         // Demo Fallback: If login failed, but we have the user in DB, 
@@ -88,7 +95,17 @@ export const api = {
                     const q = query(collection(db, 'users'), where('email', '==', idOrEmail));
                     const querySnapshot = await getDocs(q);
                     if (!querySnapshot.empty) {
-                        return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data(), uid: userCredential.user.uid };
+                        const docId = querySnapshot.docs[0].id;
+                        const userData = querySnapshot.docs[0].data();
+
+                        // Sync password if it changed (e.g. via Forgot Password link)
+                        if (userData.password !== password) {
+                            const userRef = doc(db, 'users', docId);
+                            await updateDoc(userRef, { password: password });
+                            userData.password = password;
+                        }
+
+                        return { id: docId, ...userData, uid: userCredential.user.uid };
                     }
                 } catch (e) {
                     // ignore
