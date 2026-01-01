@@ -428,7 +428,7 @@ export default function AdminTeachers() {
                                         <td>{(teacher.assignedClasses || []).join(', ') || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>None</span>}</td>
                                         <td>{teacher.email}</td>
                                         <td>
-                                            <code style={{ background: '#eee', padding: '2px 6px', borderRadius: '4px' }}>
+                                            <code style={{ padding: '2px 0', color: 'var(--text-main)', fontStyle: 'italic' }}>
                                                 {teacher.password || 'N/A'}
                                             </code>
                                         </td>
@@ -499,7 +499,7 @@ export default function AdminTeachers() {
                                     </div>
                                     <div style={{ gridColumn: '1 / -1' }}>
                                         <strong style={{ color: 'var(--text-secondary)' }}>Password:</strong>
-                                        <code style={{ background: 'var(--background)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.85rem' }}>
+                                        <code style={{ padding: '2px 0', fontSize: '0.85rem', color: 'var(--text-main)', fontStyle: 'italic' }}>
                                             {teacher.password || 'N/A'}
                                         </code>
                                     </div>

@@ -626,6 +626,7 @@ export default function AdminStudents() {
                                         <th>Photo</th>
                                         <th>Name</th>
                                         <th>Email</th>
+                                        <th>Password</th>
                                         <th>Phone</th>
                                         <th>Actions</th>
                                     </tr>
@@ -633,7 +634,7 @@ export default function AdminStudents() {
                                 <tbody>
                                     {filteredStudents.length === 0 ? (
                                         <tr>
-                                            <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                                            <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                                                 <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
                                                     {searchQuery ? `No students found matching "${searchQuery}"` : `No students found in ${selectedClass}.`}
                                                 </p>
@@ -655,6 +656,11 @@ export default function AdminStudents() {
                                                 </td>
                                                 <td>{student.name}</td>
                                                 <td>{student.email || <span style={{ opacity: 0.5 }}>-</span>}</td>
+                                                <td>
+                                                    <code style={{ padding: '2px 0', color: 'var(--text-main)', fontStyle: 'italic' }}>
+                                                        {student.password || 'password123'}
+                                                    </code>
+                                                </td>
                                                 <td>{student.phone || <span style={{ opacity: 0.5 }}>-</span>}</td>
                                                 <td>
                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -707,6 +713,12 @@ export default function AdminStudents() {
                                             <div>
                                                 <strong style={{ color: 'var(--text-secondary)' }}>Email:</strong>
                                                 <div style={{ wordBreak: 'break-all' }}>{student.email || '-'}</div>
+                                            </div>
+                                            <div>
+                                                <strong style={{ color: 'var(--text-secondary)' }}>Password:</strong>
+                                                <code style={{ padding: '2px 0', fontSize: '0.85rem', color: 'var(--text-main)', fontStyle: 'italic' }}>
+                                                    {student.password || 'password123'}
+                                                </code>
                                             </div>
                                             <div>
                                                 <strong style={{ color: 'var(--text-secondary)' }}>Phone:</strong>
