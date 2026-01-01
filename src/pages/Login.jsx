@@ -210,7 +210,7 @@ export default function Login() {
                     <div className="login-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
                             <div style={{
-                                width: '120px', height: '120px',
+                                width: '100px', height: '100px',
                                 background: 'white',
                                 borderRadius: '24px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
