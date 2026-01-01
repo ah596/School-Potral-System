@@ -47,9 +47,9 @@ export default function Navbar() {
     return (
         <nav className="navbar">
             <div className="container navbar-content">
-                <Link to="/" className="logo" style={{ background: 'none', WebkitTextFillColor: 'var(--text-main)', color: 'var(--text-main)', gap: '0.75rem', height: '100px', display: 'flex', alignItems: 'center' }}>
-                    <img src="/logo.png" alt="School Logo" style={{ width: '100px', height: '100px', objectFit: 'contain', margin: '-25px 0' }} />
-                    <span style={{ fontSize: '1.4rem' }}>School Portal</span>
+                <Link to="/" className="logo" style={{ background: 'none', WebkitTextFillColor: 'var(--text-main)', color: 'var(--text-main)', gap: '0.75rem', padding: '5px 0', display: 'flex', alignItems: 'center' }}>
+                    <img src="/logo.png" alt="School Logo" style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
+                    <span style={{ fontSize: '1.4rem', fontWeight: '700' }}>School Portal</span>
                 </Link>
 
                 {/* Desktop Navigation */}
