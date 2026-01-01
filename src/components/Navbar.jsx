@@ -47,8 +47,8 @@ export default function Navbar() {
     return (
         <nav className="navbar">
             <div className="container navbar-content">
-                <Link to="/" className="logo" style={{ background: 'none', WebkitTextFillColor: 'var(--text-main)', color: 'var(--text-main)', gap: '0.75rem' }}>
-                    <img src="/logo.png" alt="School Logo" style={{ width: '45px', height: '45px', objectFit: 'contain' }} />
+                <Link to="/" className="logo" style={{ background: 'none', WebkitTextFillColor: 'var(--text-main)', color: 'var(--text-main)', gap: '0.75rem', height: '100px', display: 'flex', alignItems: 'center' }}>
+                    <img src="/logo.png" alt="School Logo" style={{ width: '100px', height: '100px', objectFit: 'contain', margin: '-25px 0' }} />
                     <span style={{ fontSize: '1.4rem' }}>School Portal</span>
                 </Link>
 
