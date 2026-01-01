@@ -60,29 +60,19 @@ export const api = {
 
                         return { ...userData, uid: userCredential.user.uid };
                     } catch (e) {
-                        // Demo Fallback: If login failed, but we have the user in DB, 
-                        // AND it looks like a "user not found" error (auth/user-not-found) but we know they exist in Firestore...
-                        // We should probably CREATE them in Auth so Storage works.
-                        if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
-                            if (password === 'password123' || password === 'admin123') {
-                                // Try to register them now ("Lazy Registration")
-                                try {
-                                    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password);
-                                    return { ...userData, uid: userCredential.user.uid };
-                                } catch (regError) {
-                                    // If registration fails because email already exists (weird race condition), ignore.
-                                    console.warn("Lazy setup failed", regError);
-                                }
-                                // Fallback to purely local if lazy setup failed (but Storage will likely fail)
-                                return userData;
+                        // Demo Fallback / Lazy Registration: 
+                        // If the user exists in Firestore but NOT in Firebase Auth yet,
+                        // and they are using the default password, create their account.
+                        if (e.code === 'auth/user-not-found' && (password === 'password123' || password === 'admin123')) {
+                            try {
+                                const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password);
+                                return { ...userData, uid: userCredential.user.uid };
+                            } catch (regError) {
+                                console.warn("Lazy setup failed", regError);
                             }
                         }
-                        // Hard Fallback for strictly local dev environment compliance if needed
-                        if (password === 'password123' || password === 'admin123') {
-                            return userData;
-                        }
 
-                        // Otherwise real error
+                        // Otherwise real error (e.g. auth/wrong-password or auth/invalid-credential)
                         throw new Error('Invalid credentials');
                     }
                 }
