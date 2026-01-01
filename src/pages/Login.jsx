@@ -210,13 +210,14 @@ export default function Login() {
                     <div className="login-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
                             <div style={{
-                                width: '64px', height: '64px',
-                                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                borderRadius: '16px',
+                                width: '80px', height: '80px',
+                                background: 'white',
+                                borderRadius: '20px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: 'white', boxShadow: 'var(--shadow-lg)'
+                                boxShadow: 'var(--shadow-lg)',
+                                padding: '10px'
                             }}>
-                                <ShieldCheck size={32} />
+                                <img src="/logo.png" alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             </div>
                         </div>
                         <h2 style={{
