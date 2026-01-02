@@ -38,7 +38,7 @@ export default function Home() {
 
                     <div className="hero-image">
                         <div className="image-card main-image">
-                            <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80" alt="School" />
+                            <img src="/school-hero.png" alt="School" />
                             <div className="floating-card user-count">
                                 <Users size={20} />
                                 <div>
