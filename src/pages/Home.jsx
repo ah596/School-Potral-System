@@ -101,15 +101,35 @@ export default function Home() {
             </section>
 
             {/* Footer */}
-            <footer className="footer shadow-lg">
+            <footer className="footer-main">
                 <div className="container">
-                    <div className="footer-content">
+                    <div className="footer-grid">
                         <div className="footer-brand">
-                            <span className="logo-text">SchoolPortal</span>
+                            <div className="footer-logo">
+                                <GraduationCap size={24} />
+                                <span>SchoolPortal</span>
+                            </div>
                             <p>Moving education into the digital age with modern tools and smart design.</p>
                         </div>
-                        <div className="footer-links">
-                            <p>© 2026 Modern School Portal. All rights reserved.</p>
+                        <div className="footer-nav">
+                            <h4>Quick Links</h4>
+                            <ul>
+                                <li><Link to="/">Home</Link></li>
+                                <li><Link to="/login">Portal Login</Link></li>
+                                <li><a href="#features">Features</a></li>
+                            </ul>
+                        </div>
+                        <div className="footer-contact">
+                            <h4>Contact Us</h4>
+                            <p>Email: support@schoolportal.com</p>
+                            <p>Help Desk: +1 234 567 890</p>
+                        </div>
+                    </div>
+                    <div className="footer-bottom">
+                        <p>© 2026 Modern School Portal. All rights reserved.</p>
+                        <div className="footer-legal">
+                            <span>Privacy Policy</span>
+                            <span>Terms of Service</span>
                         </div>
                     </div>
                 </div>
