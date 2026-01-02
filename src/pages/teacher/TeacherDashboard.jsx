@@ -23,7 +23,12 @@ export default function TeacherDashboard() {
     const [assignedClasses, setAssignedClasses] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    const [assignmentsCount, setAssignmentsCount] = useState(0);
+    const [testsCount, setTestsCount] = useState(0);
+
     useEffect(() => {
+        if (!user?.id) return;
+
         const loadDashboardData = async () => {
             setLoading(true);
             try {
@@ -40,10 +45,22 @@ export default function TeacherDashboard() {
             }
         };
 
-        if (user?.id) {
-            loadDashboardData();
-        }
-    }, [user]);
+        loadDashboardData();
+
+        // Live Subscriptions
+        const unsubAssignments = api.subscribeToAssignments({ teacherId: user.id }, (data) => {
+            setAssignmentsCount(data.length);
+        });
+
+        const unsubTests = api.subscribeToTests({ teacherId: user.id }, (data) => {
+            setTestsCount(data.length);
+        });
+
+        return () => {
+            if (unsubAssignments) unsubAssignments();
+            if (unsubTests) unsubTests();
+        };
+    }, [user.id]);
 
     if (!user || user.role !== 'teacher') {
         return <Navigate to="/login" />;
@@ -55,8 +72,8 @@ export default function TeacherDashboard() {
         { to: '/teacher/my-attendance', label: 'My Attendance', icon: Calendar, color: '#6366f1', desc: 'View your attendance record' },
         { to: '/teacher/attendance', label: 'Mark Attendance', icon: ClipboardCheck, color: '#10b981', desc: 'Mark student attendance' },
         { to: '/teacher/marks', label: 'Upload Marks', icon: FileText, color: '#3b82f6', desc: 'Upload student marks' },
-        { to: '/teacher/tests', label: 'Test Management', icon: BookOpen, color: '#f59e0b', desc: 'Create and manage tests' },
-        { to: '/teacher/assignments', label: 'Assignments', icon: BookOpen, color: '#8b5cf6', desc: 'Manage assignments' },
+        { to: '/teacher/tests', label: 'Test Management', icon: BookOpen, color: '#f59e0b', desc: testsCount > 0 ? `${testsCount} Total Tests` : 'Create and manage tests' },
+        { to: '/teacher/assignments', label: 'Assignments', icon: BookOpen, color: '#8b5cf6', desc: assignmentsCount > 0 ? `${assignmentsCount} Total Assignments` : 'Manage assignments' },
         { to: '/teacher/students', label: 'View Students', icon: Users, color: '#f97316', desc: 'View student list' },
         { to: '/teacher/notices', label: 'Class Updates', icon: Mail, color: '#ec4899', desc: 'Post class announcements' },
     ];
@@ -71,74 +88,63 @@ export default function TeacherDashboard() {
         <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
             <div style={{ padding: '1.5rem 0' }}></div>
             {/* Teacher Profile Info Box */}
-            <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
-                    {/* Avatar */}
-                    <div style={{
-                        width: '100px',
-                        height: '100px',
-                        borderRadius: '50%',
-                        background: 'rgba(255,255,255,0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '2.5rem',
-                        fontWeight: 'bold',
-                        border: '4px solid rgba(255,255,255,0.3)',
-                        overflow: 'hidden'
-                    }}>
-                        {user.photo ? (
-                            <img
-                                src={user.photo}
-                                alt="Profile"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                        ) : (
-                            user.name.charAt(0)
-                        )}
-                    </div>
+            <div className="card teacher-profile-card">
+                <div className="teacher-profile-container">
+                    {/* Avatar & Info Wrapper */}
+                    <div className="teacher-main-info">
+                        <div className="teacher-avatar-wrapper">
+                            <div className="teacher-avatar">
+                                {user.photo ? (
+                                    <img
+                                        src={user.photo}
+                                        alt="Profile"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                ) : (
+                                    user.name.charAt(0)
+                                )}
+                            </div>
+                            <div className="teacher-badge show-mobile-only">Teacher</div>
+                        </div>
 
-                    {/* Info */}
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: '800' }}>Welcome, {user.name}!</h2>
-                        <p style={{ margin: '0.5rem 0', opacity: 0.9 }}>{user.subject} Teacher</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <FileText size={18} />
-                                <span>ID: {user.id}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Mail size={18} />
-                                <span>{user.email || `${user.id.toLowerCase()}@school.com`}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Users size={18} />
-                                <span>Classes: {assignedClasses.length > 0 ? assignedClasses.map(c => `${c.name} (${c.section})`).join(', ') : 'None Assigned'}</span>
+                        <div className="teacher-details">
+                            <h2 className="teacher-welcome-text">{user.name}</h2>
+                            <p className="teacher-subject-text hide-mobile">{user.subject}</p>
+
+                            <div className="teacher-meta-list">
+                                <div className="meta-item mobile-item">
+                                    <BookOpen size={16} className="show-mobile-only" />
+                                    <span><strong>Subject: </strong>{user.subject}</span>
+                                </div>
+                                <div className="meta-item">
+                                    <FileText size={16} />
+                                    <span><strong>ID:</strong> {user.id}</span>
+                                </div>
+                                <div className="meta-item hide-mobile">
+                                    <Mail size={16} />
+                                    <span>{user.email || `${user.id.toLowerCase()}@school.com`}</span>
+                                </div>
+                                <div className="meta-item hide-mobile">
+                                    <Users size={16} />
+                                    <span><strong>Classes:</strong> {assignedClasses.length > 0 ? assignedClasses.map(c => `${c.name} (${c.section})`).join(', ') : 'None Assigned'}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Attendance Stats */}
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
-                            <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{presentDays}</p>
-                            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Present</p>
+                    <div className="teacher-stats">
+                        <div className="stats-box">
+                            <p className="stats-value">{presentDays}</p>
+                            <p className="stats-label">Present</p>
                         </div>
-                        <div style={{
-                            textAlign: 'center',
-                            background: absentDays > 5 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255,255,255,0.15)', // Red alert if > 5 absent
-                            padding: '1rem 1.5rem',
-                            borderRadius: '12px',
-                            border: absentDays > 5 ? '2px solid #fecaca' : 'none'
-                        }}>
-                            <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{absentDays}</p>
-                            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Absent {absentDays > 5 && '(Warning!)'}</p>
+                        <div className={`stats-box ${absentDays > 5 ? 'stats-warning' : ''}`}>
+                            <p className="stats-value">{absentDays}</p>
+                            <p className="stats-label">Absent</p>
                         </div>
-                        <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.15)', padding: '1rem 1.5rem', borderRadius: '12px' }}>
-                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <p style={{ margin: 0, fontSize: '2rem', fontWeight: '800' }}>{attendancePercentage}%</p>
-                            </div>
-                            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>Attendance</p>
+                        <div className="stats-box">
+                            <p className="stats-value">{attendancePercentage}%</p>
+                            <p className="stats-label">Attendance</p>
                         </div>
                     </div>
                 </div>

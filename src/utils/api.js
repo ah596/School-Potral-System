@@ -405,6 +405,20 @@ export const api = {
         return { message: 'Deleted' };
     },
 
+    subscribeToTests: (filters, callback) => {
+        let q = collection(db, 'tests');
+        if (filters?.teacherId) {
+            q = query(q, where('teacherId', '==', filters.teacherId));
+        }
+
+        return onSnapshot(q, (snap) => {
+            const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
+    },
+
     // Attendance
     getAllAttendance: async () => {
         const snap = await getDocs(collection(db, 'attendance'));
@@ -569,6 +583,20 @@ export const api = {
     deleteAssignment: async (id) => {
         await deleteDoc(doc(db, 'assignments', id));
         return { message: 'Deleted' };
+    },
+
+    subscribeToAssignments: (filters, callback) => {
+        let q = collection(db, 'assignments');
+        if (filters?.teacherId) {
+            q = query(q, where('teacherId', '==', filters.teacherId));
+        }
+
+        return onSnapshot(q, (snap) => {
+            const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
     },
 
     // Sync Helper
