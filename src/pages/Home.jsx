@@ -39,19 +39,19 @@ export default function Home() {
                     <div className="hero-image">
                         <div className="image-card main-image">
                             <img src="/school-hero.png" alt="School" />
-                            <div className="floating-card user-count">
-                                <Users size={20} />
-                                <div>
-                                    <strong>+20 New</strong>
-                                    <span>Admissions Today</span>
-                                </div>
+                        </div>
+                        <div className="floating-card user-count">
+                            <Users size={20} />
+                            <div>
+                                <strong>+20 New</strong>
+                                <span>Admissions Today</span>
                             </div>
-                            <div className="floating-card progress-card">
-                                <CheckCircle size={20} color="var(--success)" />
-                                <div>
-                                    <strong>Attendance</strong>
-                                    <span>98% Average</span>
-                                </div>
+                        </div>
+                        <div className="floating-card progress-card">
+                            <CheckCircle size={20} color="var(--success)" />
+                            <div>
+                                <strong>Attendance</strong>
+                                <span>98% Average</span>
                             </div>
                         </div>
                     </div>

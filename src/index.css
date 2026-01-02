@@ -1041,14 +1041,14 @@ ul {
 }
 
 .user-count {
-  top: 15%;
-  left: -15%;
+  top: 10%;
+  left: -80px;
   animation: float 6s ease-in-out infinite;
 }
 
 .progress-card {
-  bottom: 15%;
-  right: -10%;
+  bottom: 10%;
+  right: -60px;
   animation: float 6s ease-in-out infinite 3s;
 }
 
@@ -1235,18 +1235,18 @@ ul {
   }
 
   .hero-image {
-    max-width: 500px;
-    margin: 0 auto;
+    max-width: 550px;
+    margin: 4rem auto 0 auto;
   }
 
   .user-count {
-    left: 0;
-    top: 0;
+    left: -20px;
+    top: -30px;
   }
 
   .progress-card {
-    right: 0;
-    bottom: 0;
+    right: -20px;
+    bottom: -30px;
   }
 
   .footer-grid {
