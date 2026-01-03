@@ -1012,12 +1012,11 @@ ul {
   overflow: hidden;
   box-shadow: var(--shadow-xl);
   border: 8px solid white;
-  transform: rotate(-2deg);
-  transition: transform 0.5s ease;
+  transition: transform 0.3s ease;
 }
 
 .main-image:hover {
-  transform: rotate(0deg);
+  transform: none;
 }
 
 .main-image img {
@@ -1041,14 +1040,14 @@ ul {
 }
 
 .user-count {
-  top: 10%;
-  left: -80px;
+  top: 2.5rem;
+  left: 2.5rem;
   animation: float 6s ease-in-out infinite;
 }
 
 .progress-card {
-  bottom: 10%;
-  right: -60px;
+  bottom: 2.5rem;
+  right: 2.5rem;
   animation: float 6s ease-in-out infinite 3s;
 }
 
@@ -1240,13 +1239,13 @@ ul {
   }
 
   .user-count {
-    left: -20px;
-    top: -30px;
+    left: 1rem;
+    top: 1rem;
   }
 
   .progress-card {
-    right: -20px;
-    bottom: -30px;
+    right: 1rem;
+    bottom: 1rem;
   }
 
   .footer-grid {
