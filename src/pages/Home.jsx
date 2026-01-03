@@ -151,7 +151,7 @@ export default function Home() {
                         <div className="footer-nav">
                             <h4>Quick Links</h4>
                             <ul>
-                                <li><Link to="/">Home</Link></li>
+                                <li><a href="/#home">Home</a></li>
                                 <li><Link to="/login">Portal Login</Link></li>
                                 <li><a href="#gallery">School Gallery</a></li>
                                 <li><a href="#features">Features</a></li>
