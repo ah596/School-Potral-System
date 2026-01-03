@@ -16,7 +16,7 @@ export default function Home() {
     return (
         <div className="home-container">
             {/* Hero Section */}
-            <header className="hero">
+            <header id="home" className="hero">
                 <div className="container hero-content">
                     <div className="hero-text">
                         <div className="badge">Education Excellence</div>

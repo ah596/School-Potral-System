@@ -48,17 +48,17 @@ export default function Navbar() {
     return (
         <nav className="navbar">
             <div className="container navbar-content">
-                <Link to="/" className="logo" style={{ background: 'none', WebkitTextFillColor: 'var(--text-main)', color: 'var(--text-main)', position: 'relative', height: '45px', display: 'flex', alignItems: 'center', minWidth: '200px' }}>
+                <a href="/#home" className="logo" style={{ background: 'none', WebkitTextFillColor: 'var(--text-main)', color: 'var(--text-main)', position: 'relative', height: '45px', display: 'flex', alignItems: 'center', minWidth: '200px', textDecoration: 'none' }}>
                     <img src="/logo.png" alt="School Logo" style={{ width: '100px', height: '100px', objectFit: 'contain', position: 'absolute', left: '-10px', top: '50%', transform: 'translateY(-50%)' }} />
                     <span style={{ fontSize: '1.4rem', fontWeight: '700', marginLeft: '77px' }}>School Portal</span>
-                </Link>
+                </a>
 
                 {/* Desktop Navigation */}
                 <div className="nav-links desktop-nav">
-                    <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <a href="/#home" className="nav-link">
                         <Home className="icon-sm" />
                         <span>Home</span>
-                    </NavLink>
+                    </a>
                     {user && (
                         <>
                             <NavLink to={getDashboardLink()} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
@@ -109,9 +109,9 @@ export default function Navbar() {
                 {/* Mobile Navigation Overlay */}
                 {isMenuOpen && user && (
                     <div className="mobile-menu">
-                        <NavLink to="/" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
+                        <a href="/#home" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
                             <Home size={18} /> Home
-                        </NavLink>
+                        </a>
                         <NavLink to={getDashboardLink()} className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
                             <LayoutDashboard size={18} /> {getDashboardLabel()}
                         </NavLink>
