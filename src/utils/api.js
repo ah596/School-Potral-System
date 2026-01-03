@@ -638,7 +638,40 @@ export const api = {
     deleteLog: async (id) => {
         await deleteDoc(doc(db, 'logs', id));
         return { message: 'Log deleted' };
+    },
+    // Gallery
+    getGallery: async () => {
+        const q = query(collection(db, 'gallery'), orderBy('createdAt', 'desc'));
+        const snap = await getDocs(q);
+        return docsData(snap);
+    },
+    addGalleryItem: async (file, title) => {
+        let imageUrl = '';
+        if (file) {
+            const fileName = `${Date.now()}_${file.name}`;
+            const fileRef = ref(storage, `gallery/${fileName}`);
+            await uploadBytes(fileRef, file);
+            imageUrl = await getDownloadURL(fileRef);
+        }
+        return await addDoc(collection(db, 'gallery'), {
+            title,
+            imageUrl,
+            createdAt: new Date().toISOString()
+        });
+    },
+    deleteGalleryItem: async (id) => {
+        return await deleteDoc(doc(db, 'gallery', id));
+    },
+    subscribeToGallery: (callback) => {
+        const q = query(collection(db, 'gallery'), orderBy('createdAt', 'desc'));
+        return onSnapshot(q, (snap) => {
+            const data = docsData(snap);
+            if (typeof callback === 'function') {
+                callback(data);
+            }
+        });
     }
 };
+
 
 

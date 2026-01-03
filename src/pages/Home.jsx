@@ -1,8 +1,18 @@
-
+import { useState, useEffect } from 'react';
 import { GraduationCap, LogIn, Users, BookOpen, Clock, ShieldCheck, CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { api } from '../utils/api';
 
 export default function Home() {
+    const [gallery, setGallery] = useState([]);
+
+    useEffect(() => {
+        const unsubscribe = api.subscribeToGallery((data) => {
+            setGallery(data);
+        });
+        return () => unsubscribe();
+    }, []);
+
     return (
         <div className="home-container">
             {/* Hero Section */}
@@ -99,6 +109,33 @@ export default function Home() {
                     </div>
                 </div>
             </section>
+
+            {/* Gallery Section */}
+            {gallery.length > 0 && (
+                <section className="home-gallery">
+                    <div className="container">
+                        <div className="section-header">
+                            <h2>Life at School</h2>
+                            <p>Capturing the best moments of our school activities and events.</p>
+                        </div>
+                    </div>
+
+                    <div className="gallery-track-container">
+                        <div className="gallery-track">
+                            {[...gallery, ...gallery, ...gallery].map((item, index) => (
+                                <div key={`${item.id}-${index}`} className="gallery-slide">
+                                    <div className="gallery-card">
+                                        <img src={item.imageUrl} alt={item.title} />
+                                        <div className="gallery-overlay">
+                                            <span>{item.title}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Footer */}
             <footer className="footer-main">

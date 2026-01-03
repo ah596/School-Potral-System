@@ -1266,3 +1266,121 @@ ul {
     gap: 1rem;
   }
 }
+
+/* Home Gallery Scroll Animation */
+.home-gallery {
+  padding: 6rem 0;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.gallery-track-container {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 2rem 0;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+.gallery-track {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  animation: scrollGallery 60s linear infinite;
+}
+
+.gallery-track:hover {
+  animation-play-state: paused;
+}
+
+.gallery-slide {
+  width: 400px;
+  flex-shrink: 0;
+}
+
+.gallery-card {
+  position: relative;
+  height: 280px;
+  border-radius: 2rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.gallery-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--primary);
+}
+
+.gallery-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.gallery-card:hover img {
+  transform: scale(1.1);
+}
+
+.gallery-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.4) 50%, transparent 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 2rem;
+  color: white;
+  opacity: 0;
+  transition: all 0.4s ease;
+}
+
+.gallery-card:hover .gallery-overlay {
+  opacity: 1;
+}
+
+.gallery-overlay span {
+  font-weight: 800;
+  font-size: 1.25rem;
+  transform: translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gallery-card:hover .gallery-overlay span {
+  transform: translateY(0);
+}
+
+@keyframes scrollGallery {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+@media (max-width: 768px) {
+  .gallery-slide {
+    width: 280px;
+  }
+
+  .gallery-card {
+    height: 200px;
+    border-radius: 1.5rem;
+  }
+
+  .gallery-overlay {
+    padding: 1rem;
+    opacity: 1;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.8) 0%, transparent 70%);
+  }
+
+  .gallery-overlay span {
+    font-size: 1rem;
+    transform: none;
+  }
+}

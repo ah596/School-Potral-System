@@ -46,6 +46,8 @@ const AdminTeacherView = lazy(() => import('./pages/admin/AdminTeacherView'));
 const AdminTeacherAttendance = lazy(() => import('./pages/admin/AdminTeacherAttendance'));
 const AdminFees = lazy(() => import('./pages/admin/AdminFees'));
 const AdminClasses = lazy(() => import('./pages/admin/AdminClasses'));
+const AdminGallery = lazy(() => import('./pages/admin/AdminGallery'));
+
 
 function App() {
   return (
@@ -96,6 +98,7 @@ function App() {
                 <Route path="admin/fees" element={<ProtectedRoute role="admin"><AdminFees /></ProtectedRoute>} />
                 <Route path="admin/payments" element={<ProtectedRoute role="admin"><AdminPayments /></ProtectedRoute>} />
                 <Route path="admin/reports" element={<ProtectedRoute role="admin"><AdminReports /></ProtectedRoute>} />
+                <Route path="admin/gallery" element={<ProtectedRoute role="admin"><AdminGallery /></ProtectedRoute>} />
               </Route>
             </Routes>
           </Suspense>
