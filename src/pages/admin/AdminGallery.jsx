@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../../utils/api';
-import { Plus, Trash2, ArrowLeft, Image as ImageIcon, Upload, Loader2 } from 'lucide-react';
+import { Trash2, ArrowLeft, Image as ImageIcon, Link as LinkIcon, ExternalLink, Loader2, Plus } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
 
 export default function AdminGallery() {
@@ -11,15 +11,13 @@ export default function AdminGallery() {
     const navigate = useNavigate();
     const [gallery, setGallery] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
+    const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
-        file: null
+        imageUrl: ''
     });
 
     useEffect(() => {
-        // Real-time subscription
         const unsubscribe = api.subscribeToGallery((data) => {
             setGallery(data);
             setLoading(false);
@@ -29,196 +27,165 @@ export default function AdminGallery() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Gallery Upload Version: 2.0");
-        if (!formData.file) {
-            alert("Please select an image");
-            return;
-        }
-        setUploading(true);
-        setUploadProgress(0);
+        if (!formData.imageUrl) return;
+
+        setSubmitting(true);
         try {
-            await api.addGalleryItem(formData.file, formData.title, (progress) => {
-                setUploadProgress(Math.round(progress));
-            });
-            setFormData({ title: '', file: null });
-            // Reset file input
-            const fileInput = document.getElementById('gallery-file');
-            if (fileInput) fileInput.value = '';
+            await api.addGalleryItem(formData.imageUrl, formData.title || 'Untitled Event');
+            setFormData({ title: '', imageUrl: '' });
         } catch (error) {
             console.error("Failed to add gallery item", error);
-            alert("FAILED: " + (error.code || error.message || "Unknown error") + "\n\nPlease check Firebase Storage Rules.");
+            alert("Failed to save. Error: " + error.message);
         } finally {
-            setUploading(false);
-            setUploadProgress(0);
+            setSubmitting(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this photo?')) {
+        if (window.confirm('Delete this photo from the gallery?')) {
             try {
                 await api.deleteGalleryItem(id);
             } catch (error) {
-                console.error("Failed to delete gallery item", error);
-                alert("Failed to delete photo");
+                console.error("Failed to delete", error);
+                alert("Delete failed");
             }
         }
     };
 
-    if (!user || user.role !== 'admin') {
-        return <Navigate to="/login" />;
-    }
-
+    if (!user || user.role !== 'admin') return <Navigate to="/login" />;
     if (loading) return <LoadingScreen message="Loading Gallery..." />;
 
     return (
-        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
-            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                    <button
-                        onClick={() => navigate(-1)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '45px',
-                            height: '45px',
-                            borderRadius: '12px',
-                            background: 'var(--surface)',
-                            border: '1px solid var(--border)',
-                            color: 'var(--primary)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: 'var(--shadow-sm)'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateX(-3px)';
-                            e.currentTarget.style.background = 'var(--primary)';
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateX(0)';
-                            e.currentTarget.style.background = 'var(--surface)';
-                            e.currentTarget.style.color = 'var(--primary)';
-                        }}
-                        title="Go Back"
-                    >
-                        <ArrowLeft size={24} />
-                    </button>
-                    <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
-                        School Gallery Management
-                    </h2>
+        <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) 4rem', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ padding: '1.5rem 0', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <button onClick={() => navigate(-1)} className="btn-back">
+                    <ArrowLeft size={24} />
+                </button>
+                <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                    School Gallery Management
+                </h2>
+            </div>
+
+            <div className="admin-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
+                {/* Add Form */}
+                <div>
+                    <div className="card" style={{ sticky: 'top 2rem', border: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                            <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                                <ImageIcon size={24} />
+                            </div>
+                            <h3 style={{ margin: 0 }}>Add New Event Photo</h3>
+                        </div>
+
+                        <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)', marginBottom: '1.5rem' }}>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <ExternalLink size={14} /> Free Photo Tip:
+                            </p>
+                            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                To use your own photos without a paid plan, upload them to <a href="https://postimages.org" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: '700' }}>PostImages.org</a> and paste the <b>Direct Link</b> below.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label>Photo Title / Event Name</label>
+                                <input
+                                    type="text"
+                                    value={formData.title}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    placeholder="e.g. Annual Sports Day 2026"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Image Direct URL</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type="url"
+                                        value={formData.imageUrl}
+                                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                        placeholder="https://example.com/photo.jpg"
+                                        style={{ paddingLeft: '2.75rem' }}
+                                        required
+                                    />
+                                    <LinkIcon size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                                </div>
+                            </div>
+
+                            {formData.imageUrl && (
+                                <div style={{ marginBottom: '1.5rem', borderRadius: '12px', overflow: 'hidden', border: '2px dashed var(--border)', background: 'var(--surface-alt)' }}>
+                                    <p style={{ margin: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>Live Preview:</p>
+                                    <img
+                                        src={formData.imageUrl}
+                                        alt="Preview"
+                                        style={{ width: '100%', height: '180px', objectFit: 'cover' }}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            alert("Invalid Image URL. Please use a direct link ending in .jpg, .png or .webp");
+                                        }}
+                                        onLoad={(e) => e.target.style.display = 'block'}
+                                    />
+                                </div>
+                            )}
+
+                            <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '52px' }} disabled={submitting}>
+                                {submitting ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />}
+                                {submitting ? 'Saving...' : 'Add to Home Gallery'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {/* List/Preview */}
+                <div className="card" style={{ border: '1px solid var(--border)' }}>
+                    <h3 style={{ marginBottom: '1.5rem' }}>Active Gallery Items ({gallery.length})</h3>
+                    {gallery.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '3rem 1rem', opacity: 0.5 }}>
+                            <ImageIcon size={48} style={{ marginBottom: '1rem' }} />
+                            <p>No photos added yet.</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                            {gallery.map(item => (
+                                <div key={item.id} style={{
+                                    display: 'flex',
+                                    gap: '1rem',
+                                    padding: '0.75rem',
+                                    borderRadius: '12px',
+                                    background: 'var(--surface-alt)',
+                                    border: '1px solid var(--border)',
+                                    alignItems: 'center'
+                                }}>
+                                    <img src={item.imageUrl} alt={item.title} style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'cover' }} />
+                                    <div style={{ flex: 1 }}>
+                                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>{item.title}</h4>
+                                        <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                            {new Date(item.createdAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDelete(item.id)}
+                                        style={{ padding: '0.5rem', borderRadius: '8px', border: 'none', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', cursor: 'pointer' }}
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div style={{ padding: '1rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid var(--warning)', borderRadius: '12px', marginBottom: '2rem' }}>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--warning)', fontWeight: '600' }}>
-                    🔍 Upload Debug Info:
-                    <span style={{ marginLeft: '10px', opacity: 0.8 }}>UID: {user.uid || 'Not Verified'}</span>
-                    <span style={{ marginLeft: '10px', opacity: 0.8 }}>| Role: {user.role}</span>
-                </p>
-                <p style={{ margin: '5px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    If upload stays at 0%, please ensure your Firebase Storage Rules allow "write" access for authenticated users.
-                </p>
-            </div>
-
-            <div className="card" style={{ marginBottom: '2rem' }}>
-                <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <ImageIcon size={24} color="var(--primary)" />
-                    Upload New Image
-                </h3>
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Activity/Event Title</label>
-                        <input
-                            type="text"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            placeholder="e.g. Annual Sports Day 2026"
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Image File</label>
-                        <input
-                            type="file"
-                            id="gallery-file"
-                            accept="image/*"
-                            onChange={(e) => setFormData({ ...formData, file: e.target.files[0] })}
-                            style={{ padding: '0.5rem 0' }}
-                            required
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary" disabled={uploading}>
-                        {uploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
-                        {uploading ? `Uploading ${uploadProgress}%...` : 'Upload to Gallery'}
-                    </button>
-                </form>
-            </div>
-
-            <div className="card">
-                <h3 style={{ marginBottom: '2rem' }}>Gallery Preview</h3>
-                {gallery.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '4rem 2rem', border: '2px dashed var(--border)', borderRadius: 'var(--radius)' }}>
-                        <ImageIcon size={48} color="var(--text-light)" style={{ marginBottom: '1rem' }} />
-                        <p style={{ color: 'var(--text-muted)' }}>No images in the gallery yet. Start by uploading one!</p>
-                    </div>
-                ) : (
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                        gap: '1.5rem'
-                    }}>
-                        {gallery.map(item => (
-                            <div key={item.id} className="gallery-item-card" style={{
-                                position: 'relative',
-                                borderRadius: 'var(--radius)',
-                                overflow: 'hidden',
-                                border: '1px solid var(--border)',
-                                background: 'var(--surface)',
-                                transition: 'all 0.3s ease'
-                            }}>
-                                <img
-                                    src={item.imageUrl}
-                                    alt={item.title}
-                                    style={{
-                                        width: '100%',
-                                        height: '200px',
-                                        objectFit: 'cover',
-                                        display: 'block'
-                                    }}
-                                />
-                                <div style={{ padding: '1rem' }}>
-                                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', fontWeight: '700' }}>{item.title}</h4>
-                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        {new Date(item.createdAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => handleDelete(item.id)}
-                                    style={{
-                                        position: 'absolute',
-                                        top: '0.75rem',
-                                        right: '0.75rem',
-                                        padding: '0.5rem',
-                                        borderRadius: '50%',
-                                        background: 'rgba(239, 68, 68, 0.9)',
-                                        color: 'white',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        boxShadow: 'var(--shadow-md)',
-                                        transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                                    title="Delete Photo"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            <style>{`
+                .btn-back {
+                    width: 45px; height: 45px; border-radius: 12px;
+                    background: var(--surface); border: 1px solid var(--border);
+                    color: var(--primary); display: flex; align-items: center; justify-content: center;
+                    cursor: pointer; transition: all 0.2s;
+                }
+                .btn-back:hover { background: var(--primary); color: white; transform: translateX(-3px); }
+                .admin-grid { min-height: 600px; }
+            `}</style>
         </div>
     );
 }

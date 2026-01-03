@@ -645,52 +645,8 @@ export const api = {
         const snap = await getDocs(q);
         return docsData(snap);
     },
-    addGalleryItem: async (file, title, onProgress) => {
-        console.log("Starting upload:", title, file.name);
-        let imageUrl = '';
-        if (file) {
-            const fileName = `${Date.now()}_${file.name}`;
-            const fileRef = ref(storage, `gallery/${fileName}`);
-
-            const uploadTask = uploadBytesResumable(fileRef, file);
-
-            // Add a 30 second timeout
-            const timeout = setTimeout(() => {
-                uploadTask.cancel();
-                reject(new Error("Upload timed out (30s). This usually means Firebase Storage Rules are blocking the request or your internet is unstable."));
-            }, 30000);
-
-            // Return a promise that resolves when upload + URL fetch + Firestore write is done
-            await new Promise((resolve, reject_inner) => {
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        console.log('Upload is ' + progress + '% done');
-                        if (onProgress) onProgress(progress);
-                    },
-                    (error) => {
-                        clearTimeout(timeout);
-                        console.error("Upload Task Error:", error);
-                        reject_inner(error);
-                    },
-                    async () => {
-                        clearTimeout(timeout);
-                        try {
-                            imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                            console.log("Got URL:", imageUrl);
-                            resolve();
-                        } catch (e) {
-                            reject_inner(e);
-                        }
-                    }
-                );
-            }).catch(e => {
-                clearTimeout(timeout);
-                throw e;
-            });
-        }
-
-        console.log("Adding to Firestore...");
+    addGalleryItem: async (imageUrl, title) => {
+        console.log("Saving to Firestore:", title, imageUrl);
         return await addDoc(collection(db, 'gallery'), {
             title,
             imageUrl,
