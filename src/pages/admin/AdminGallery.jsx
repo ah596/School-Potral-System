@@ -110,6 +110,17 @@ export default function AdminGallery() {
                 </div>
             </div>
 
+            <div style={{ padding: '1rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid var(--warning)', borderRadius: '12px', marginBottom: '2rem' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--warning)', fontWeight: '600' }}>
+                    🔍 Upload Debug Info:
+                    <span style={{ marginLeft: '10px', opacity: 0.8 }}>UID: {user.uid || 'Not Verified'}</span>
+                    <span style={{ marginLeft: '10px', opacity: 0.8 }}>| Role: {user.role}</span>
+                </p>
+                <p style={{ margin: '5px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    If upload stays at 0%, please ensure your Firebase Storage Rules allow "write" access for authenticated users.
+                </p>
+            </div>
+
             <div className="card" style={{ marginBottom: '2rem' }}>
                 <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <ImageIcon size={24} color="var(--primary)" />

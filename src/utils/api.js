@@ -654,8 +654,14 @@ export const api = {
 
             const uploadTask = uploadBytesResumable(fileRef, file);
 
+            // Add a 30 second timeout
+            const timeout = setTimeout(() => {
+                uploadTask.cancel();
+                reject(new Error("Upload timed out (30s). This usually means Firebase Storage Rules are blocking the request or your internet is unstable."));
+            }, 30000);
+
             // Return a promise that resolves when upload + URL fetch + Firestore write is done
-            await new Promise((resolve, reject) => {
+            await new Promise((resolve, reject_inner) => {
                 uploadTask.on('state_changed',
                     (snapshot) => {
                         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
@@ -663,19 +669,24 @@ export const api = {
                         if (onProgress) onProgress(progress);
                     },
                     (error) => {
+                        clearTimeout(timeout);
                         console.error("Upload Task Error:", error);
-                        reject(error);
+                        reject_inner(error);
                     },
                     async () => {
+                        clearTimeout(timeout);
                         try {
                             imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
                             console.log("Got URL:", imageUrl);
                             resolve();
                         } catch (e) {
-                            reject(e);
+                            reject_inner(e);
                         }
                     }
                 );
+            }).catch(e => {
+                clearTimeout(timeout);
+                throw e;
             });
         }
 
