@@ -56,7 +56,7 @@ export default function Layout() {
             </main>
             <footer className="footer">
                 <div className="container">
-                    <p>&copy; 2024 School Portal. All rights reserved.</p>
+                    <p>&copy; 2024 School Portal. All rights reserved. | <Link to="/#gallery" style={{ color: 'var(--primary)', textDecoration: 'none' }}>School Gallery</Link></p>
                 </div>
             </footer>
         </div>

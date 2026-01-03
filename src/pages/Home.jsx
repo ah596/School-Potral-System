@@ -112,10 +112,10 @@ export default function Home() {
 
             {/* Gallery Section */}
             {gallery.length > 0 && (
-                <section className="home-gallery">
+                <section id="gallery" className="home-gallery">
                     <div className="container">
                         <div className="section-header">
-                            <h2>Life at School</h2>
+                            <h2>School Gallery</h2>
                             <p>Capturing the best moments of our school activities and events.</p>
                         </div>
                     </div>
@@ -153,6 +153,7 @@ export default function Home() {
                             <ul>
                                 <li><Link to="/">Home</Link></li>
                                 <li><Link to="/login">Portal Login</Link></li>
+                                <li><a href="#gallery">School Gallery</a></li>
                                 <li><a href="#features">Features</a></li>
                             </ul>
                         </div>

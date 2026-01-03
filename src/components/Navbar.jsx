@@ -58,6 +58,10 @@ export default function Navbar() {
                         <Home className="icon-sm" />
                         <span>Home</span>
                     </NavLink>
+                    <a href="/#gallery" className="nav-link">
+                        <ImageIcon className="icon-sm" />
+                        <span>Gallery</span>
+                    </a>
                     {user && (
                         <>
                             <NavLink to={getDashboardLink()} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
