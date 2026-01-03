@@ -41,7 +41,7 @@ export default function AdminGallery() {
             if (fileInput) fileInput.value = '';
         } catch (error) {
             console.error("Failed to add gallery item", error);
-            alert("Failed to upload image");
+            alert("Failed to upload image: " + (error.code || error.message || "Unknown error"));
         } finally {
             setUploading(false);
         }

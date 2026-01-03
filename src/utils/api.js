@@ -646,13 +646,22 @@ export const api = {
         return docsData(snap);
     },
     addGalleryItem: async (file, title) => {
+        console.log("Starting upload:", title, file.name);
         let imageUrl = '';
         if (file) {
             const fileName = `${Date.now()}_${file.name}`;
             const fileRef = ref(storage, `gallery/${fileName}`);
-            await uploadBytes(fileRef, file);
-            imageUrl = await getDownloadURL(fileRef);
+            try {
+                const snapshot = await uploadBytes(fileRef, file);
+                console.log("Upload successful, getting URL...");
+                imageUrl = await getDownloadURL(snapshot.ref);
+                console.log("Got URL:", imageUrl);
+            } catch (storageError) {
+                console.error("Storage Error:", storageError);
+                throw storageError;
+            }
         }
+        console.log("Adding to Firestore...");
         return await addDoc(collection(db, 'gallery'), {
             title,
             imageUrl,
