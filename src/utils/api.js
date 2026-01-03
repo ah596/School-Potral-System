@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
 
 
 // Helper to convert snap to data with ID
@@ -645,22 +645,40 @@ export const api = {
         const snap = await getDocs(q);
         return docsData(snap);
     },
-    addGalleryItem: async (file, title) => {
+    addGalleryItem: async (file, title, onProgress) => {
         console.log("Starting upload:", title, file.name);
         let imageUrl = '';
         if (file) {
             const fileName = `${Date.now()}_${file.name}`;
             const fileRef = ref(storage, `gallery/${fileName}`);
-            try {
-                const snapshot = await uploadBytes(fileRef, file);
-                console.log("Upload successful, getting URL...");
-                imageUrl = await getDownloadURL(snapshot.ref);
-                console.log("Got URL:", imageUrl);
-            } catch (storageError) {
-                console.error("Storage Error:", storageError);
-                throw storageError;
-            }
+
+            const uploadTask = uploadBytesResumable(fileRef, file);
+
+            // Return a promise that resolves when upload + URL fetch + Firestore write is done
+            await new Promise((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                        if (onProgress) onProgress(progress);
+                    },
+                    (error) => {
+                        console.error("Upload Task Error:", error);
+                        reject(error);
+                    },
+                    async () => {
+                        try {
+                            imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                            console.log("Got URL:", imageUrl);
+                            resolve();
+                        } catch (e) {
+                            reject(e);
+                        }
+                    }
+                );
+            });
         }
+
         console.log("Adding to Firestore...");
         return await addDoc(collection(db, 'gallery'), {
             title,

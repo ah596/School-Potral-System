@@ -12,6 +12,7 @@ export default function AdminGallery() {
     const [gallery, setGallery] = useState([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [formData, setFormData] = useState({
         title: '',
         file: null
@@ -34,8 +35,11 @@ export default function AdminGallery() {
             return;
         }
         setUploading(true);
+        setUploadProgress(0);
         try {
-            await api.addGalleryItem(formData.file, formData.title);
+            await api.addGalleryItem(formData.file, formData.title, (progress) => {
+                setUploadProgress(Math.round(progress));
+            });
             setFormData({ title: '', file: null });
             // Reset file input
             const fileInput = document.getElementById('gallery-file');
@@ -45,6 +49,7 @@ export default function AdminGallery() {
             alert("FAILED: " + (error.code || error.message || "Unknown error") + "\n\nPlease check Firebase Storage Rules.");
         } finally {
             setUploading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -134,7 +139,7 @@ export default function AdminGallery() {
                     </div>
                     <button type="submit" className="btn btn-primary" disabled={uploading}>
                         {uploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
-                        {uploading ? 'Uploading...' : 'Upload to Gallery'}
+                        {uploading ? `Uploading ${uploadProgress}%...` : 'Upload to Gallery'}
                     </button>
                 </form>
             </div>
