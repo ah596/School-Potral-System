@@ -1100,7 +1100,7 @@ ul {
 
 .feature-card:hover {
   transform: translateY(-15px);
-  background: white;
+  background: var(--surface);
   box-shadow: var(--shadow-xl);
   border-color: var(--primary);
 }
