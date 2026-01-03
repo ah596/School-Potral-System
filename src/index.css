@@ -1011,7 +1011,7 @@ ul {
   border-radius: 3rem;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
-  border: 8px solid white;
+  border: 8px solid var(--surface);
   transition: transform 0.3s ease;
 }
 
@@ -1027,15 +1027,15 @@ ul {
 
 .floating-card {
   position: absolute;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: var(--surface-glass);
+  backdrop-filter: var(--backdrop-blur);
   padding: 1.25rem;
   border-radius: 1.5rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-xl);
   display: flex;
   align-items: center;
   gap: 1rem;
-  border: 1px solid white;
+  border: 1px solid var(--border);
   z-index: 10;
 }
 
@@ -1065,7 +1065,7 @@ ul {
 /* Features Block */
 .features {
   padding: 4rem 0;
-  background: white;
+  background: var(--surface);
   margin: 2rem 0;
   border-radius: 4rem;
 }
