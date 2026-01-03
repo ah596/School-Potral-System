@@ -931,7 +931,7 @@ ul {
 }
 
 .hero {
-  padding: 10rem 0 6rem 0;
+  padding: 4rem 0 6rem 0;
   position: relative;
   background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent);
 }
