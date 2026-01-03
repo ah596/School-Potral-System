@@ -28,6 +28,7 @@ export default function AdminGallery() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("Gallery Upload Version: 2.0");
         if (!formData.file) {
             alert("Please select an image");
             return;
@@ -41,7 +42,7 @@ export default function AdminGallery() {
             if (fileInput) fileInput.value = '';
         } catch (error) {
             console.error("Failed to add gallery item", error);
-            alert("Failed to upload image: " + (error.code || error.message || "Unknown error"));
+            alert("FAILED: " + (error.code || error.message || "Unknown error") + "\n\nPlease check Firebase Storage Rules.");
         } finally {
             setUploading(false);
         }
