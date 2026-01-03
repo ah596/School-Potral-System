@@ -1011,7 +1011,7 @@ ul {
   border-radius: 3rem;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
-  border: 8px solid var(--surface);
+  border: 8px solid white;
   transition: transform 0.3s ease;
 }
 
@@ -1127,12 +1127,12 @@ ul {
   color: var(--text-muted);
 }
 
-/* Footer New Layout */
 .footer-main {
-  background: var(--text-main);
-  color: white;
+  background: var(--surface);
+  color: var(--text-main);
   padding: 6rem 0 2rem 0;
   border-radius: 4rem 4rem 0 0;
+  border-top: 1px solid var(--border);
 }
 
 .footer-grid {
@@ -1149,7 +1149,7 @@ ul {
   font-size: 1.75rem;
   font-weight: 800;
   margin-bottom: 1.5rem;
-  color: white;
+  color: var(--primary);
 }
 
 .footer-brand p {
@@ -1188,12 +1188,12 @@ ul {
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border);
   padding-top: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  opacity: 0.4;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
