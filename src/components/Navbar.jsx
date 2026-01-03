@@ -10,7 +10,8 @@ import {
     X,
     Home,
     Sun,
-    Moon
+    Moon,
+    Image as ImageIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
