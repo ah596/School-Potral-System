@@ -13,40 +13,41 @@ export default function MigrateData() {
     const handleMigration = async () => {
         setStatus('loading');
         setLogs([]);
-        addLog('Starting migration...');
+        addLog('Starting migration from local server (http://localhost:5000)...');
 
         try {
             const batch = writeBatch(db);
             let count = 0;
 
             // 1. Migrate Students
-            addLog('Fetching students from local database...');
-            const students = await api.getStudents();
+            addLog('Fetching students from local server...');
+            const studentsRes = await fetch('http://localhost:5000/api/students');
+            if (!studentsRes.ok) throw new Error('Failed to fetch students from local server. Ensure it is running.');
+            const students = await studentsRes.json();
             addLog(`Found ${students.length} students.`);
 
             for (const student of students) {
                 const ref = doc(db, 'users', student.id);
-                // Split base user data and student specific data
+                // Ensure proper structure for Firestore
                 const userData = {
                     id: student.id,
                     name: student.name,
                     role: 'student',
-                    email: student.email || '',
+                    email: student.email || `${student.id.toLowerCase()}@school.com`, // Ensure email exists
                     photo: student.photo || '',
-                    // Default password for Firebase Auth migration (handled separately ideally, but storing ref here)
-                };
-                const studentData = {
-                    grade_level: student.grade_level,
+                    password: student.password || 'password123',
+                    grade_level: student.grade_level || '',
                     attendance_percentage: student.attendance_percentage || 0
                 };
-
-                batch.set(ref, { ...userData, ...studentData });
+                batch.set(ref, userData);
                 count++;
             }
 
             // 2. Migrate Teachers
-            addLog('Fetching teachers from local database...');
-            const teachers = await api.getTeachers();
+            addLog('Fetching teachers from local server...');
+            const teachersRes = await fetch('http://localhost:5000/api/teachers');
+            if (!teachersRes.ok) throw new Error('Failed to fetch teachers from local server.');
+            const teachers = await teachersRes.json();
             addLog(`Found ${teachers.length} teachers.`);
 
             for (const teacher of teachers) {
@@ -55,63 +56,130 @@ export default function MigrateData() {
                     id: teacher.id,
                     name: teacher.name,
                     role: 'teacher',
-                    email: teacher.email || '',
-                    photo: teacher.photo || ''
-                };
-                const teacherData = {
-                    subject: teacher.subject,
+                    email: teacher.email || `${teacher.id.toLowerCase()}@school.com`, // Ensure email exists
+                    photo: teacher.photo || '',
+                    password: teacher.password || 'password123',
+                    subject: teacher.subject || '',
                     classes: teacher.classes || [],
-                    salary: teacher.salary,
-                    join_date: teacher.join_date
+                    salary: teacher.salary || 0,
+                    join_date: teacher.join_date || new Date().toISOString()
                 };
 
-                batch.set(ref, { ...userData, ...teacherData });
+                batch.set(ref, userData);
                 count++;
             }
 
             // 3. Migrate Notices
-            addLog('Fetching notices...');
-            const notices = await api.getNotices();
-            addLog(`Found ${notices.length} notices.`);
-
-            for (const notice of notices) {
-                // Use auto-ID for notices or preserve ID if it was a string, but local DB uses Integers. 
-                // Better to let Firestore generate ID or use stringified ID.
-                const ref = doc(db, 'notices', notice.id.toString());
-                batch.set(ref, notice);
-                count++;
+            addLog('Fetching notices from local server...');
+            const noticesRes = await fetch('http://localhost:5000/api/notices');
+            if (noticesRes.ok) {
+                const notices = await noticesRes.json();
+                addLog(`Found ${notices.length} notices.`);
+                for (const notice of notices) {
+                    const ref = doc(collection(db, 'notices')); // Use new ID or preserve? Let's preserve if string
+                    batch.set(ref, {
+                        ...notice,
+                        id: notice.id?.toString() || '',
+                        timestamp: notice.date || new Date().toISOString()
+                    });
+                    count++;
+                }
             }
 
             // 4. Migrate Classes
-            addLog('Fetching classes...');
-            const classes = await api.getClasses();
-            addLog(`Found ${classes.length} classes.`);
-
-            for (const cls of classes) {
-                const ref = doc(db, 'classes', cls.id.toString());
-                batch.set(ref, cls);
-                count++;
+            addLog('Fetching classes from local server...');
+            const classesRes = await fetch('http://localhost:5000/api/classes');
+            if (classesRes.ok) {
+                const classes = await classesRes.json();
+                addLog(`Found ${classes.length} classes.`);
+                for (const cls of classes) {
+                    const ref = doc(db, 'classes', cls.id.toString());
+                    batch.set(ref, {
+                        ...cls,
+                        id: cls.id.toString(),
+                        classTeacherId: cls.class_teacher_id || ''
+                    });
+                    count++;
+                }
             }
 
-            // 5. Migrate Admin (Hardcoded usually in seed, but let's Ensure)
+            // 5. Ensure Admin and Super Admin accounts exist for entry
+            addLog('Ensuring Admin (ADM001) and Super Admin (SUPER001) accounts exist...');
             const adminRef = doc(db, 'users', 'ADM001');
             batch.set(adminRef, {
                 id: 'ADM001',
                 name: 'Principal Anderson',
                 role: 'admin',
-                email: 'admin@school.com'
-            });
-            count++;
+                email: 'admin@school.com',
+                password: 'admin123'
+            }, { merge: true });
 
+            const superAdminRef = doc(db, 'users', 'SUPER001');
+            batch.set(superAdminRef, {
+                id: 'SUPER001',
+                name: 'Super Administrator',
+                role: 'super_admin',
+                email: 'superadmin@school.com',
+                password: 'superadmin123'
+            }, { merge: true });
+            count += 2;
 
             addLog(`Committing ${count} documents to Firestore...`);
             await batch.commit();
 
             addLog('Migration completed successfully!');
             setStatus('success');
-
         } catch (error) {
             console.error(error);
+            addLog(`ERROR: ${error.message}`);
+            addLog('TIP: Make sure your local backend (npm start in /backend) is running!');
+            setStatus('error');
+        }
+    };
+
+    const handleSeedAdmin = async () => {
+        setStatus('loading');
+        setLogs([]);
+        addLog('Seeding Admin and Super Admin accounts to Firestore...');
+        try {
+            const adminRef = doc(db, 'users', 'ADM001');
+            await setDoc(adminRef, {
+                id: 'ADM001',
+                name: 'Principal Anderson',
+                role: 'admin',
+                email: 'admin@school.com',
+                password: 'admin123'
+            }, { merge: true });
+
+            const superAdminRef = doc(db, 'users', 'SUPER001');
+            await setDoc(superAdminRef, {
+                id: 'SUPER001',
+                name: 'Super Administrator',
+                role: 'super_admin',
+                email: 'superadmin@school.com',
+                password: 'superadmin123'
+            }, { merge: true });
+
+            addLog('Admin account (ADM001) and Super Admin (SUPER001) successfully created/updated.');
+            addLog('Admin: ADM001 / admin123');
+            addLog('Super Admin: SUPER001 / superadmin123');
+            setStatus('success');
+        } catch (error) {
+            addLog(`ERROR: ${error.message}`);
+            setStatus('error');
+        }
+    };
+
+    const handleSyncAuth = async () => {
+        setStatus('loading');
+        setLogs([]);
+        addLog('Connecting Firestore users to Firebase Auth accounts...');
+        try {
+            const result = await api.syncUsersToAuth();
+            addLog(`Sync Status: ${result.created} created, ${result.errors} already existing or failed.`);
+            addLog('All users can now log in using their ID and the default password (password123).');
+            setStatus('success');
+        } catch (error) {
             addLog(`ERROR: ${error.message}`);
             setStatus('error');
         }
@@ -126,34 +194,60 @@ export default function MigrateData() {
                 </div>
 
                 <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                    This tool moves data from your local SQLite database to your new Firebase Firestore database.
-                    Click the button below to start.
+                    This tool restores your School Portal by moving data from the local database (SQLite) to Firebase Firestore.
+                    It also <strong>ensures the Admin account (ADM001) is set up</strong> so you can log in.
                 </p>
 
+                <div style={{ padding: '1rem', background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                    <strong>Prerequisite:</strong> Make sure your local server is running. Open a new terminal and run:<br />
+                    <code>cd backend && npm start</code>
+                </div>
+
                 <div style={{
-                    background: '#f8fafc',
-                    padding: '1rem',
+                    background: '#1e293b',
+                    color: '#f8fafc',
+                    padding: '1.5rem',
                     borderRadius: '8px',
                     height: '300px',
                     overflowY: 'auto',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid #334155',
                     marginBottom: '1.5rem',
                     fontFamily: 'monospace',
                     fontSize: '0.9rem'
                 }}>
-                    {logs.length === 0 ? <span style={{ color: '#94a3b8' }}>Waiting to start...</span> : logs.map((log, i) => (
-                        <div key={i} style={{ marginBottom: '4px' }}>{log}</div>
+                    {logs.length === 0 ? <span style={{ color: '#64748b' }}>// Ready to sync data...</span> : logs.map((log, i) => (
+                        <div key={i} style={{ marginBottom: '6px', borderLeft: '2px solid #3b82f6', paddingLeft: '8px' }}>{log}</div>
                     ))}
                 </div>
 
-                <button
-                    onClick={handleMigration}
-                    disabled={status === 'loading'}
-                    className="btn btn-primary"
-                    style={{ width: '100%', padding: '1rem' }}
-                >
-                    {status === 'loading' ? 'Migrating...' : 'Start Migration'}
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <button
+                        onClick={handleMigration}
+                        disabled={status === 'loading'}
+                        className="btn btn-primary"
+                        style={{ width: '100%', padding: '1rem' }}
+                    >
+                        {status === 'loading' ? 'Migrating...' : 'Start Full Migration (Needs Backend)'}
+                    </button>
+
+                    <button
+                        onClick={handleSyncAuth}
+                        disabled={status === 'loading'}
+                        className="btn btn-secondary"
+                        style={{ width: '100%', padding: '1rem', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer' }}
+                    >
+                        {status === 'loading' ? 'Syncing...' : 'Step 2: Create Login Accounts (Auth Sync)'}
+                    </button>
+
+                    <button
+                        onClick={handleSeedAdmin}
+                        disabled={status === 'loading'}
+                        className="btn btn-secondary"
+                        style={{ width: '100%', padding: '1rem', background: '#64748b', color: 'white', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer' }}
+                    >
+                        {status === 'loading' ? 'Processing...' : 'Emergency: Reset Admin Account'}
+                    </button>
+                </div>
 
                 {status === 'success' && (
                     <div style={{

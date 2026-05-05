@@ -25,13 +25,20 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        const success = await login(id, password);
-        if (success) {
-            if (id.startsWith('ADM')) navigate('/admin/dashboard');
-            else if (id.startsWith('TCH')) navigate('/teacher/dashboard');
-            else navigate('/dashboard');
-        } else {
-            setError('Invalid ID or Password');
+        try {
+            const userData = await api.login(id, password);
+            if (userData) {
+                // We let the context handle the state update
+                await login(id, password);
+
+                const role = userData.role;
+                if (role === 'super_admin') navigate('/super-admin/dashboard');
+                else if (role === 'admin') navigate('/admin/dashboard');
+                else if (role === 'teacher') navigate('/teacher/dashboard');
+                else navigate('/dashboard');
+            }
+        } catch (err) {
+            setError(err.message || 'Invalid ID or Password');
         }
     };
 
@@ -301,7 +308,18 @@ export default function Login() {
                         </button>
                     </form>
 
-                    <div style={{ marginTop: 'auto', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ marginTop: 'auto', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                        <button
+                            onClick={() => {
+                                setId('SUPER001');
+                                setPassword('superadmin123');
+                            }}
+                            style={{ width: '100%', marginBottom: '1rem', padding: '0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', background: 'transparent', color: 'var(--primary)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                        >
+                            <ShieldCheck size={18} />
+                            Super Admin Portal
+                        </button>
+
                         <button
                             onClick={() => setShowDemo(!showDemo)}
                             style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '1rem', fontWeight: '600', textDecoration: 'underline', padding: '0.75rem' }}
@@ -316,10 +334,13 @@ export default function Login() {
                                     <span>Student: <strong>STU001</strong></span>
                                     <span>Teacher: <strong>TCH001</strong></span>
                                 </div>
-                                <div style={{ textAlign: 'center', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                                    Admin: <strong>ADM001</strong>
+                                <div style={{ textAlign: 'center', fontSize: '0.85rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                                    <span>Admin: <strong>ADM001</strong></span>
+                                    <span>Super Admin: <strong>SUPER001</strong></span>
                                 </div>
-                                <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', textAlign: 'center' }}>Password: <strong>password123</strong> (for Student/Teacher) | <strong>admin123</strong> (for Admin)</div>
+                                <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', textAlign: 'center' }}>
+                                    Password: <strong>password123</strong> (S/T) | <strong>admin123</strong> (Admin) | <strong>superadmin123</strong> (Super)
+                                </div>
                             </div>
                         )}
                     </div>

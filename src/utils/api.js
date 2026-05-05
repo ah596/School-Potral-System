@@ -39,18 +39,30 @@ const createAuthUser = async (email, password) => {
 export const api = {
     // Auth (Login with Firebase Auth or fallback to ID lookup)
     login: async (idOrEmail, password) => {
-        // ... (existing login logic)
         try {
             // 1. Try to find user by ID in Firestore first
-            const userRef = doc(db, 'users', idOrEmail);
-            const userSnap = await getDoc(userRef);
+            let userDocId = idOrEmail;
+            let userRef = doc(db, 'users', userDocId);
+            let userSnap = await getDoc(userRef);
+
+            console.log("Firestore lookup for:", userDocId, "Found:", userSnap.exists());
+
+            // Robust ID check: If direct match fails, try uppercase (common for school IDs like STU-001)
+            if (!userSnap.exists()) {
+                userDocId = idOrEmail.toUpperCase();
+                userRef = doc(db, 'users', userDocId);
+                userSnap = await getDoc(userRef);
+                console.log("Firestore lookup retry (uppercase):", userDocId, "Found:", userSnap.exists());
+            }
 
             if (userSnap.exists()) {
                 const userData = userSnap.data();
+                console.log("User found in Firestore. Email:", userData.email);
 
                 if (userData.email) {
                     try {
                         const userCredential = await signInWithEmailAndPassword(auth, userData.email, password);
+                        console.log("Firebase Auth Success for:", userData.email);
 
                         // Sync password if it changed (e.g. via Forgot Password link)
                         if (userData.password !== password) {
@@ -58,52 +70,58 @@ export const api = {
                             userData.password = password;
                         }
 
-                        return { ...userData, uid: userCredential.user.uid };
+                        return { ...userData, id: userDocId, uid: userCredential.user.uid };
                     } catch (e) {
+                        console.error("Firebase Auth Error:", e.code, e.message);
                         // Demo Fallback / Lazy Registration: 
                         // If the user exists in Firestore but NOT in Firebase Auth yet,
                         // and they are using the default password, create their account.
-                        if (e.code === 'auth/user-not-found' && (password === 'password123' || password === 'admin123')) {
+                        if (e.code === 'auth/user-not-found' && (password === 'password123' || password === 'admin123' || password === 'superadmin123')) {
+                            console.log("User not in Auth. Attempting lazy registration...");
                             try {
                                 const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password);
-                                return { ...userData, uid: userCredential.user.uid };
+                                return { ...userData, id: userDocId, uid: userCredential.user.uid };
                             } catch (regError) {
                                 console.warn("Lazy setup failed", regError);
                             }
                         }
 
                         // Otherwise real error (e.g. auth/wrong-password or auth/invalid-credential)
-                        throw new Error('Invalid credentials');
+                        throw new Error(`Login failed: ${e.code}`);
                     }
+                } else {
+                    console.error("User document found but no email field exists.");
                 }
             } else {
+                console.log("No user found by ID. Trying Email login directly...");
                 // Try Login as Email directly (if using a different ID than Firestore ID)
-
                 try {
                     const userCredential = await signInWithEmailAndPassword(auth, idOrEmail, password);
+                    console.log("Direct Email Auth Success:", idOrEmail);
                     // Find the user document by email
                     const q = query(collection(db, 'users'), where('email', '==', idOrEmail));
                     const querySnapshot = await getDocs(q);
                     if (!querySnapshot.empty) {
-                        const docId = querySnapshot.docs[0].id;
-                        const userData = querySnapshot.docs[0].data();
+                        const foundDoc = querySnapshot.docs[0];
+                        const userData = foundDoc.data();
 
                         // Sync password if it changed (e.g. via Forgot Password link)
                         if (userData.password !== password) {
-                            const userRef = doc(db, 'users', docId);
-                            await updateDoc(userRef, { password: password });
+                            await updateDoc(foundDoc.ref, { password: password });
                             userData.password = password;
                         }
 
-                        return { id: docId, ...userData, uid: userCredential.user.uid };
+                        return { id: foundDoc.id, ...userData, uid: userCredential.user.uid };
+                    } else {
+                        console.warn("Auth success but no Firestore document found for email:", idOrEmail);
                     }
                 } catch (e) {
-                    // ignore
+                    console.error("Direct Email Auth Error:", e.code);
                 }
             }
             throw new Error('User not found or invalid credentials');
         } catch (error) {
-            console.error(error);
+            console.error("Login Engine Error:", error);
             throw error;
         }
     },
@@ -231,6 +249,48 @@ export const api = {
         const q = query(collection(db, 'users'), where('role', '==', 'teacher'));
         const snap = await getDocs(q);
         return docsData(snap);
+    },
+
+    // Admins (Super Admin Only)
+    getAdmins: async () => {
+        const q = query(collection(db, 'users'), where('role', '==', 'admin'));
+        const snap = await getDocs(q);
+        return docsData(snap);
+    },
+
+    addAdmin: async (adminData) => {
+        const ref = doc(db, 'users', adminData.id);
+        const data = { ...adminData, role: 'admin' };
+        await setDoc(ref, data);
+
+        // Create Auth account
+        if (data.email && data.password) {
+            try {
+                await createAuthUser(data.email, data.password);
+            } catch (e) {
+                console.warn("Auth creation failed for admin:", e);
+            }
+        }
+
+        await api.addLog({
+            action: 'ADD_ADMIN',
+            targetId: adminData.id,
+            targetName: adminData.name,
+            details: `New admin ${adminData.name} added by Super Admin`,
+            timestamp: new Date().toISOString()
+        });
+        return data;
+    },
+
+    deleteAdmin: async (id) => {
+        await deleteDoc(doc(db, 'users', id));
+        return { message: 'Deleted' };
+    },
+
+    updateUser: async (id, userData) => {
+        const ref = doc(db, 'users', id);
+        await updateDoc(ref, userData);
+        return { id, ...userData };
     },
 
     addTeacher: async (teacherData) => {
@@ -609,7 +669,9 @@ export const api = {
         for (const user of users) {
             if (user.email && user.email.includes('@')) {
                 try {
-                    await createAuthUser(user.email, 'password123');
+                    // Use their saved password if available, otherwise default
+                    const pwd = user.password || 'password123';
+                    await createAuthUser(user.email, pwd);
                     created++;
                     console.log(`Synced: ${user.email}`);
                 } catch (e) {

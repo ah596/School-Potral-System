@@ -11,9 +11,9 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 
 // Lazy load feature pages
+import MigrateData from './pages/MigrateData';
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const MigrateData = lazy(() => import('./pages/MigrateData'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Fees = lazy(() => import('./pages/Fees'));
 const Attendance = lazy(() => import('./pages/Attendance'));
@@ -47,6 +47,8 @@ const AdminTeacherAttendance = lazy(() => import('./pages/admin/AdminTeacherAtte
 const AdminFees = lazy(() => import('./pages/admin/AdminFees'));
 const AdminClasses = lazy(() => import('./pages/admin/AdminClasses'));
 const AdminGallery = lazy(() => import('./pages/admin/AdminGallery'));
+const SuperAdminDashboard = lazy(() => import('./pages/admin/SuperAdminDashboard'));
+const ManageAdmins = lazy(() => import('./pages/admin/ManageAdmins'));
 
 
 function App() {
@@ -61,7 +63,6 @@ function App() {
                 <Route path="login" element={<Login />} />
                 <Route path="forgot-password" element={<ForgotPassword />} />
                 <Route path="reset-password" element={<ResetPassword />} />
-                <Route path="migrate" element={<MigrateData />} />
 
                 {/* Common Protected Routes */}
                 <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -99,6 +100,11 @@ function App() {
                 <Route path="admin/payments" element={<ProtectedRoute role="admin"><AdminPayments /></ProtectedRoute>} />
                 <Route path="admin/reports" element={<ProtectedRoute role="admin"><AdminReports /></ProtectedRoute>} />
                 <Route path="admin/gallery" element={<ProtectedRoute role="admin"><AdminGallery /></ProtectedRoute>} />
+                <Route path="admin/migrate" element={<ProtectedRoute role="admin"><MigrateData /></ProtectedRoute>} />
+
+                {/* Super Admin Routes */}
+                <Route path="super-admin/dashboard" element={<ProtectedRoute role="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
+                <Route path="super-admin/manage-admins" element={<ProtectedRoute role="super_admin"><ManageAdmins /></ProtectedRoute>} />
               </Route>
             </Routes>
           </Suspense>

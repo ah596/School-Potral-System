@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../../utils/api';
 import { auth } from '../../firebase';
-import { Plus, Edit2, Trash2, Save, X, Search, Loader, ArrowLeft } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Search, Loader, ArrowLeft, RefreshCw } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
 
 
@@ -170,12 +170,21 @@ export default function AdminTeachers() {
         setEditingId(null);
     };
 
-    const handleClassToggle = (className) => {
-        const currentClasses = formData.classes || [];
-        if (currentClasses.includes(className)) {
-            setFormData({ ...formData, classes: currentClasses.filter(c => c !== className) });
-        } else {
-            setFormData({ ...formData, classes: [...currentClasses, className] });
+    const handleToggleStatus = async (teacher) => {
+        const newStatus = teacher.status === 'disabled' ? 'active' : 'disabled';
+        try {
+            await api.updateUser(teacher.id, { status: newStatus });
+            await loadData();
+
+            await api.addLog({
+                action: 'UPDATE_TEACHER_STATUS',
+                targetId: teacher.id,
+                targetName: teacher.name,
+                details: `Teacher account ${newStatus} by ${user.role}`,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            alert("Failed to update status: " + error.message);
         }
     };
 
@@ -183,7 +192,7 @@ export default function AdminTeachers() {
         return <LoadingScreen message="Checking permissions..." />;
     }
 
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
         return <Navigate to="/login" replace />;
     }
 
@@ -412,7 +421,7 @@ export default function AdminTeachers() {
                                 </tr>
                             ) : (
                                 filteredTeachers.map(teacher => (
-                                    <tr key={teacher.id}>
+                                    <tr key={teacher.id} style={{ opacity: teacher.status === 'disabled' ? 0.6 : 1 }}>
                                         <td>{teacher.id}</td>
                                         <td>
                                             {teacher.photo ? (
@@ -435,10 +444,18 @@ export default function AdminTeachers() {
                                         <td>${teacher.salary}</td>
                                         <td>
                                             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                                <button onClick={() => handleEdit(teacher)} className="btn btn-sm btn-outline">
+                                                <button onClick={() => handleEdit(teacher)} title="Edit" className="btn btn-sm btn-outline">
                                                     <Edit2 size={16} />
                                                 </button>
-                                                <button onClick={() => handleDelete(teacher.id)} className="btn btn-sm btn-outline" style={{ color: 'var(--danger)' }}>
+                                                <button
+                                                    onClick={() => handleToggleStatus(teacher)}
+                                                    title={teacher.status === 'disabled' ? 'Enable' : 'Disable'}
+                                                    className="btn btn-sm btn-outline"
+                                                    style={{ color: teacher.status === 'disabled' ? '#10b981' : '#f59e0b' }}
+                                                >
+                                                    <RefreshCw size={16} className={teacher.status === 'disabled' ? '' : 'spin-once'} />
+                                                </button>
+                                                <button onClick={() => handleDelete(teacher.id)} title="Delete" className="btn btn-sm btn-outline" style={{ color: 'var(--danger)' }}>
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>

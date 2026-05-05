@@ -82,6 +82,8 @@ export default function AdminDashboard() {
     };
 
     const menuItems = [
+        { to: '/admin/migrate', label: 'Full Migration Tool', icon: Shield, color: 'linear-gradient(135deg, #ef4444, #f87171)', desc: 'Sync Local Data to Firebase' },
+        { onClick: handleSyncUsers, label: 'Sync User Logins', icon: RefreshCw, color: 'linear-gradient(135deg, #6366f1, #8b5cf6)', desc: 'Sync all users to Firebase Auth', isAction: true },
         { to: '/admin/classes', label: 'Manage Classes', icon: BookOpen, color: 'linear-gradient(135deg, #06b6d4, #22d3ee)', desc: 'Create and manage classes' },
         { to: '/admin/teachers', label: 'Manage Teachers', icon: Users, color: 'linear-gradient(135deg, #3b82f6, #60a5fa)', desc: 'Add, edit, assign classes' },
         { to: '/admin/students', label: 'Manage Students', icon: GraduationCap, color: 'linear-gradient(135deg, #10b981, #34d399)', desc: 'Add, edit student records' },
@@ -93,7 +95,6 @@ export default function AdminDashboard() {
         { to: '/admin/fees', label: 'Student Fees', icon: DollarSign, color: 'linear-gradient(135deg, #10b981, #34d399)', desc: 'Manage fees & challans' },
         { to: '/admin/payments', label: 'Teacher Payments', icon: DollarSign, color: 'linear-gradient(135deg, #f59e0b, #fbbf24)', desc: 'Manage salaries' },
         { to: '/admin/reports', label: 'Reports', icon: BarChart3, color: 'linear-gradient(135deg, #06b6d4, #22d3ee)', desc: 'View analytics' },
-        { onClick: handleSyncUsers, label: 'Sync User Logins', icon: RefreshCw, color: 'linear-gradient(135deg, #6366f1, #8b5cf6)', desc: 'Sync all users to Firebase Auth', isAction: true },
     ];
 
     return (
@@ -101,7 +102,6 @@ export default function AdminDashboard() {
             <style>{`
                 @media (max-width: 768px) {
                     .admin-extra-info { display: none !important; }
-                    .admin-sync-card { display: none !important; }
                     .admin-header-flex { gap: 1rem !important; flex-wrap: wrap !important; }
                     .admin-profile-section { flex: 1; display: flex !important; align-items: center !important; gap: 1rem !important; width: 100% !important; }
                     .admin-avatar { width: 80px !important; height: 80px !important; }

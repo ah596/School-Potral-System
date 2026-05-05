@@ -33,6 +33,7 @@ export default function Navbar() {
     // Get dashboard link based on role
     const getDashboardLink = () => {
         if (!user) return '/dashboard';
+        if (user.role === 'super_admin') return '/super-admin/dashboard';
         if (user.role === 'teacher') return '/teacher/dashboard';
         if (user.role === 'admin') return '/admin/dashboard';
         return '/dashboard';
@@ -40,6 +41,7 @@ export default function Navbar() {
 
     const getDashboardLabel = () => {
         if (!user) return 'Dashboard';
+        if (user.role === 'super_admin') return 'Super Admin Dashboard';
         if (user.role === 'teacher') return 'Teacher Dashboard';
         if (user.role === 'admin') return 'Admin Dashboard';
         return 'Dashboard';

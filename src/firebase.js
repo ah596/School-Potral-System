@@ -6,13 +6,13 @@ import { getStorage } from "firebase/storage";
 
 
 export const firebaseConfig = {
-    apiKey: "AIzaSyCXM00b7kBiTzjXhwUUA-JJgBA2l8_AKcY",
-    authDomain: "kgs-school-portal.firebaseapp.com",
-    projectId: "kgs-school-portal",
-    storageBucket: "kgs-school-portal.firebasestorage.app",
-    messagingSenderId: "353001444028",
-    appId: "1:353001444028:web:9c790f242d7b8c749d76b9",
-    measurementId: "G-6PR7XZGXNL"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

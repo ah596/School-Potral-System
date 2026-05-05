@@ -211,6 +211,24 @@ export default function AdminStudents() {
         }
     };
 
+    const handleToggleStatus = async (student) => {
+        const newStatus = student.status === 'disabled' ? 'active' : 'disabled';
+        try {
+            await api.updateUser(student.id, { status: newStatus });
+            await loadData();
+
+            await api.addLog({
+                action: 'UPDATE_STUDENT_STATUS',
+                targetId: student.id,
+                targetName: student.name,
+                details: `Student account ${newStatus} by ${user.role} (ID: ${user.id})`,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            alert("Failed to update status: " + error.message);
+        }
+    };
+
     const handleCancel = () => {
         setIsAdding(false);
         setEditingId(null);
@@ -643,7 +661,7 @@ export default function AdminStudents() {
                                         </tr>
                                     ) : (
                                         filteredStudents.map(student => (
-                                            <tr key={student.id}>
+                                            <tr key={student.id} style={{ opacity: student.status === 'disabled' ? 0.6 : 1 }}>
                                                 <td style={{ fontWeight: '600' }}>{student.id}</td>
                                                 <td>
                                                     {student.photo ? (
@@ -663,11 +681,19 @@ export default function AdminStudents() {
                                                 </td>
                                                 <td>{student.phone || <span style={{ opacity: 0.5 }}>-</span>}</td>
                                                 <td>
-                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button onClick={() => handleEdit(student)} className="btn btn-sm btn-outline">
+                                                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                                        <button onClick={() => handleEdit(student)} title="Edit" className="btn btn-sm btn-outline" style={{ padding: '0.4rem' }}>
                                                             <Edit2 size={16} />
                                                         </button>
-                                                        <button onClick={() => handleDelete(student.id)} className="btn btn-sm btn-outline" style={{ color: 'var(--danger)' }}>
+                                                        <button
+                                                            onClick={() => handleToggleStatus(student)}
+                                                            title={student.status === 'disabled' ? 'Activate Student' : 'Deactivate Student'}
+                                                            className="btn btn-sm btn-outline"
+                                                            style={{ padding: '0.4rem', color: student.status === 'disabled' ? '#10b981' : '#f59e0b' }}
+                                                        >
+                                                            <RefreshCw size={16} />
+                                                        </button>
+                                                        <button onClick={() => handleDelete(student.id)} title="Delete" className="btn btn-sm btn-outline" style={{ padding: '0.4rem', color: 'var(--danger)' }}>
                                                             <Trash2 size={16} />
                                                         </button>
                                                     </div>
