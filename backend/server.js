@@ -1192,10 +1192,12 @@ app.get('/api/check-email', async (req, res) => {
 // ========================
 // SERVER START
 // ========================
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-        console.log(`Server running on http://localhost:${PORT}`);
-    });
-}
 
+// Vercel serverless requires exporting the app
 module.exports = app;
+
+// Only start the server locally if not running in a serverless environment
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+}
