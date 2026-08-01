@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import LoadingScreen from './components/LoadingScreen';
 import ProtectedRoute from './components/ProtectedRoute';
+import { Toaster } from 'react-hot-toast';
 
 // Eager load critical pages
 import Login from './pages/Login';
@@ -56,6 +57,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <Toaster position="top-right" />
           <Suspense fallback={<LoadingScreen message="Loading..." />}>
             <Routes>
               <Route path="/" element={<Layout />}>

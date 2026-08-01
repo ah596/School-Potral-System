@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { api } from '../../utils/api';
+import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import {
     Users,
     UserPlus,
@@ -63,17 +65,17 @@ export default function ManageAdmins() {
         try {
             if (editingAdmin) {
                 await api.updateUser(newAdmin.id, newAdmin);
-                alert("Administrator updated successfully!");
+                toast.success("Administrator updated successfully!");
             } else {
                 await api.addAdmin({ ...newAdmin, status: 'active' });
-                alert("New Administrator created successfully!");
+                toast.success("New Administrator created successfully!");
             }
             await fetchAdmins();
             setShowAddModal(false);
             setEditingAdmin(null);
             setNewAdmin({ id: '', name: '', email: '', password: '' });
         } catch (error) {
-            alert("Error: " + error.message);
+            toast.error("Error: " + error.message);
         }
     };
 
@@ -90,18 +92,31 @@ export default function ManageAdmins() {
                 details: `Admin account ${newStatus} by Super Admin`,
                 timestamp: new Date().toISOString()
             });
+            toast.success(`Admin account ${newStatus === 'active' ? 'unlocked' : 'locked'} successfully!`);
         } catch (error) {
-            alert("Failed to update status: " + error.message);
+            toast.error("Failed to update status: " + error.message);
         }
     };
 
     const handleDeleteAdmin = async (id) => {
-        if (!confirm("Are you sure you want to delete this administrator? This action cannot be undone.")) return;
-        try {
-            await api.deleteAdmin(id);
-            await fetchAdmins();
-        } catch (error) {
-            alert("Error: " + error.message);
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await api.deleteAdmin(id);
+                toast.success("Administrator deleted successfully!");
+                await fetchAdmins();
+            } catch (error) {
+                toast.error("Error: " + error.message);
+            }
         }
     };
 

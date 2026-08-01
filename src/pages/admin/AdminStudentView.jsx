@@ -46,6 +46,21 @@ export default function AdminStudentView() {
         localStorage.setItem('admin_student_locks', JSON.stringify(newLocks));
     };
 
+    const toggleClassLock = (section, lockState) => {
+        const classStudents = students.filter(s => s.gradeLevel === selectedClass || s.grade_level === selectedClass);
+        const newLocks = { ...lockedSections };
+        for (const student of classStudents) {
+            const key = `${student.id}_${section}`;
+            if (lockState) {
+                newLocks[key] = true;
+            } else {
+                delete newLocks[key];
+            }
+        }
+        setLockedSections(newLocks);
+        localStorage.setItem('admin_student_locks', JSON.stringify(newLocks));
+    };
+
     const isLocked = (studentId, section) => {
         return lockedSections[`${studentId}_${section}`] || false;
     };
@@ -447,11 +462,93 @@ export default function AdminStudentView() {
                                 </div>
                             </div>
                         </>
+                    ) : selectedClass ? (
+                        <>
+                            {/* Class Level Settings */}
+                            <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #4f46e5, #6366f1)', color: 'white' }}>
+                                <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>Class Access Control: {selectedClass}</h3>
+                                <p style={{ margin: '0.25rem 0 0 0', opacity: 0.9 }}>
+                                    Manage access permissions for all {students.filter(s => s.gradeLevel === selectedClass || s.grade_level === selectedClass).length} students of {selectedClass} simultaneously.
+                                </p>
+                            </div>
+
+                            <div className="card">
+                                <h3 style={{ marginBottom: '1.5rem' }}>Class Sections Access</h3>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                                    {sections.map(section => {
+                                        const classSts = students.filter(s => s.gradeLevel === selectedClass || s.grade_level === selectedClass);
+                                        const lockedCount = classSts.filter(s => isLocked(s.id, section.id)).length;
+                                        const allLocked = classSts.length > 0 && lockedCount === classSts.length;
+                                        const someLocked = lockedCount > 0 && lockedCount < classSts.length;
+
+                                        return (
+                                            <div
+                                                key={section.id}
+                                                style={{
+                                                    padding: '1.5rem',
+                                                    border: '1px solid var(--border)',
+                                                    borderRadius: 'var(--radius)',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    background: allLocked ? 'rgba(239, 68, 68, 0.05)' : someLocked ? 'rgba(245, 158, 11, 0.05)' : 'rgba(16, 185, 129, 0.05)',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                    <div style={{
+                                                        width: '48px',
+                                                        height: '48px',
+                                                        background: `${section.color}20`,
+                                                        borderRadius: '12px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: section.color
+                                                    }}>
+                                                        <section.icon size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{section.label}</h4>
+                                                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                                            {allLocked ? 'All Restricted' : someLocked ? `${lockedCount}/${classSts.length} Restricted` : 'All Unrestricted'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                    <button
+                                                        onClick={() => toggleClassLock(section.id, true)}
+                                                        className="btn btn-sm btn-outline"
+                                                        style={{
+                                                            borderColor: '#ef4444',
+                                                            color: '#ef4444',
+                                                        }}
+                                                    >
+                                                        Lock All
+                                                    </button>
+                                                    <button
+                                                        onClick={() => toggleClassLock(section.id, false)}
+                                                        className="btn btn-sm btn-primary"
+                                                        style={{
+                                                            background: '#10b981',
+                                                            borderColor: '#10b981',
+                                                            color: 'white',
+                                                        }}
+                                                    >
+                                                        Unlock All
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </>
                     ) : (
                         <div className="card" style={{ textAlign: 'center', padding: '4rem', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                             <Eye size={64} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
-                            <h3 style={{ color: 'var(--text-muted)' }}>Select a student to manage access</h3>
-                            <p style={{ color: 'var(--text-muted)', opacity: 0.7 }}>Click on a student from the list on the left</p>
+                            <h3 style={{ color: 'var(--text-muted)' }}>Select a Class or Student</h3>
+                            <p style={{ color: 'var(--text-muted)', opacity: 0.7 }}>Choose a class above to lock/unlock class sections, or select a student from the list.</p>
                         </div>
                     )}
                 </div>

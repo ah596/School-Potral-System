@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { api } from '../../utils/api';
-import { auth } from '../../firebase';
 import { Plus, Edit2, Trash2, Save, X, Search, Loader, RefreshCw, ArrowLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import LoadingScreen from '../../components/LoadingScreen';
 
 
@@ -25,7 +26,9 @@ export default function AdminStudents() {
         email: '',
         phone: '',
         photo: '',
-        password: 'password123'
+        password: 'password123',
+        overtimeApplicable: false,
+        firstAdmission: true
     });
     const [emailError, setEmailError] = useState('');
 
@@ -62,7 +65,7 @@ export default function AdminStudents() {
 
     const handleAdd = () => {
         if (!selectedClass) {
-            alert("Please select a class first.");
+            toast.error("Please select a class first.");
             return;
         }
         setIsAdding(true);
@@ -124,19 +127,25 @@ export default function AdminStudents() {
             email: '',
             phone: '',
             photo: '',
-            password: 'password123'
+            password: 'password123',
+            overtimeApplicable: false,
+            firstAdmission: true
         });
     };
 
     const handleEdit = (student) => {
         setEditingId(student.id);
-        setFormData(student);
+        setFormData({ 
+            ...student, 
+            overtimeApplicable: !!student.overtime_applicable,
+            firstAdmission: student.first_admission !== 0 
+        });
         setEmailError('');
     };
 
     const handleSave = async () => {
         if (!formData.name || !formData.id || !formData.email) {
-            alert("Name, ID, and Email are required");
+            toast.error("Name, ID, and Email are required");
             return;
         }
 
@@ -157,7 +166,7 @@ export default function AdminStudents() {
                 // Convert to Base64 for direct database storage (bypassing Storage bucket for simplicity)
                 // Limit size to 1MB to respect Firestore limits
                 if (selectedFile.size > 1024 * 1024) {
-                    alert("Image too large. Please choose an image under 1MB.");
+                    toast.error("Image too large. Please choose an image under 1MB.");
                     setIsSaving(false);
                     return;
                 }
@@ -173,7 +182,7 @@ export default function AdminStudents() {
                     photoUrl = await toBase64(selectedFile);
                 } catch (e) {
                     console.error("File reading failed", e);
-                    alert("Failed to read file.");
+                    toast.error("Failed to read file.");
                     setIsSaving(false);
                     return;
                 }
@@ -183,8 +192,10 @@ export default function AdminStudents() {
 
             if (isAdding) {
                 await api.addStudent(dataToSave);
+                toast.success('Student added successfully!');
             } else {
                 await api.updateStudent(editingId, dataToSave);
+                toast.success('Student updated successfully!');
             }
             setIsAdding(false);
             setEditingId(null);
@@ -192,7 +203,7 @@ export default function AdminStudents() {
             await loadData();
         } catch (error) {
             console.error('Failed to save student:', error);
-            alert(`Failed to save student: ${error.message}`);
+            toast.error('Failed to save student.');
         } finally {
             setIsSaving(false);
         }
@@ -200,13 +211,24 @@ export default function AdminStudents() {
 
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this student?')) {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (result.isConfirmed) {
             try {
                 await api.deleteStudent(id);
+                toast.success('Student deleted successfully!');
                 await loadData();
             } catch (error) {
                 console.error('Failed to delete student:', error);
-                alert('Failed to delete student');
+                toast.error('Failed to delete student.');
             }
         }
     };
@@ -224,8 +246,10 @@ export default function AdminStudents() {
                 details: `Student account ${newStatus} by ${user.role} (ID: ${user.id})`,
                 timestamp: new Date().toISOString()
             });
+            toast.success(`Student ${newStatus === 'active' ? 'unlocked' : 'locked'} successfully!`);
         } catch (error) {
-            alert("Failed to update status: " + error.message);
+            console.error(error);
+            toast.error('Failed to change student status.');
         }
     };
 
@@ -277,6 +301,15 @@ export default function AdminStudents() {
 
     return (
         <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <style>{`
+                .stu-table tr { transition: background 0.15s; }
+                .stu-table tr:hover td { background: rgba(99,102,241,0.04); }
+                .stu-table td, .stu-table th { padding: 1rem 1.1rem; }
+                .stu-action-btn { transition: all 0.18s; border-radius: 8px; padding: 0.4rem 0.5rem; }
+                .stu-action-btn:hover { transform: scale(1.1); }
+                .stu-mobile-card { transition: box-shadow 0.2s, transform 0.2s; }
+                .stu-mobile-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md) !important; }
+            `}</style>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', padding: '1.5rem 0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
@@ -310,9 +343,12 @@ export default function AdminStudents() {
                         >
                             <ArrowLeft size={24} />
                         </button>
-                        <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
-                            Manage Students
-                        </h2>
+                        <div>
+                            <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                                Manage Students
+                            </h2>
+                            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.88rem' }}>{students.length} total students enrolled</p>
+                        </div>
                     </div>
                     {!isAdding && (
                         <button onClick={handleAdd} className="btn btn-primary" style={{ whiteSpace: 'nowrap', padding: '0.8rem 1.5rem', borderRadius: '12px' }}>
@@ -525,7 +561,7 @@ export default function AdminStudents() {
             </div>
 
             {(isAdding || editingId) && (
-                <div className="card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--primary)' }}>
+                <div className="card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--primary)', boxShadow: 'var(--shadow-md)' }}>
                     <h3 style={{ marginBottom: '1.5rem' }}>{isAdding ? `Add Student to ${selectedClass}` : 'Edit Student'}</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
                         <div className="form-group">
@@ -601,6 +637,30 @@ export default function AdminStudents() {
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             />
                         </div>
+                        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', padding: '0.5rem', background: 'var(--background-alt)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            <input
+                                type="checkbox"
+                                id="overtimeToggle"
+                                checked={formData.overtimeApplicable || false}
+                                onChange={(e) => setFormData({ ...formData, overtimeApplicable: e.target.checked })}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                            <label htmlFor="overtimeToggle" style={{ margin: 0, cursor: 'pointer', fontWeight: 'bold', color: 'var(--primary)' }}>
+                                Overtime Applicable
+                            </label>
+                        </div>
+                        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', padding: '0.5rem', background: 'var(--background-alt)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            <input
+                                type="checkbox"
+                                id="firstAdmissionToggle"
+                                checked={formData.firstAdmission || false}
+                                onChange={(e) => setFormData({ ...formData, firstAdmission: e.target.checked })}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                            <label htmlFor="firstAdmissionToggle" style={{ margin: 0, cursor: 'pointer', fontWeight: 'bold', color: 'var(--primary)' }}>
+                                First Admission (New Student)
+                            </label>
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
@@ -637,16 +697,16 @@ export default function AdminStudents() {
 
                         {/* Desktop Table View */}
                         <div className="students-table-responsive table-responsive" style={{ display: 'none' }}>
-                            <table className="table">
+                            <table className="table stu-table">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Photo</th>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Password</th>
-                                        <th>Phone</th>
-                                        <th>Actions</th>
+                                        <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID</th>
+                                        <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Photo</th>
+                                        <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
+                                        <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</th>
+                                        <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</th>
+                                        <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone</th>
+                                        <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -672,7 +732,11 @@ export default function AdminStudents() {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td>{student.name}</td>
+                                                <td>
+                                                    {student.name}
+                                                    {student.overtime_applicable ? <span style={{ marginLeft: '0.5rem', background: '#f59e0b', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>OT</span> : null}
+                                                    {student.first_admission === 1 ? <span style={{ marginLeft: '0.5rem', background: '#10b981', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>NEW</span> : null}
+                                                </td>
                                                 <td>{student.email || <span style={{ opacity: 0.5 }}>-</span>}</td>
                                                 <td>
                                                     <code style={{ padding: '2px 0', color: 'var(--text-main)', fontStyle: 'italic' }}>
@@ -682,18 +746,13 @@ export default function AdminStudents() {
                                                 <td>{student.phone || <span style={{ opacity: 0.5 }}>-</span>}</td>
                                                 <td>
                                                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                                                        <button onClick={() => handleEdit(student)} title="Edit" className="btn btn-sm btn-outline" style={{ padding: '0.4rem' }}>
+                                                        <button onClick={() => handleEdit(student)} title="Edit" className="btn btn-sm btn-outline stu-action-btn">
                                                             <Edit2 size={16} />
                                                         </button>
-                                                        <button
-                                                            onClick={() => handleToggleStatus(student)}
-                                                            title={student.status === 'disabled' ? 'Activate Student' : 'Deactivate Student'}
-                                                            className="btn btn-sm btn-outline"
-                                                            style={{ padding: '0.4rem', color: student.status === 'disabled' ? '#10b981' : '#f59e0b' }}
-                                                        >
+                                                        <button onClick={() => handleToggleStatus(student)} title={student.status === 'disabled' ? 'Activate Student' : 'Deactivate Student'} className="btn btn-sm btn-outline stu-action-btn" style={{ color: student.status === 'disabled' ? '#10b981' : '#f59e0b' }}>
                                                             <RefreshCw size={16} />
                                                         </button>
-                                                        <button onClick={() => handleDelete(student.id)} title="Delete" className="btn btn-sm btn-outline" style={{ padding: '0.4rem', color: 'var(--danger)' }}>
+                                                        <button onClick={() => handleDelete(student.id)} title="Delete" className="btn btn-sm btn-outline stu-action-btn" style={{ color: 'var(--danger)' }}>
                                                             <Trash2 size={16} />
                                                         </button>
                                                     </div>
@@ -713,11 +772,12 @@ export default function AdminStudents() {
                                 </p>
                             ) : (
                                 filteredStudents.map(student => (
-                                    <div key={student.id} style={{
-                                        border: '2px solid var(--border)',
-                                        borderRadius: 'var(--radius)',
-                                        padding: '1rem',
-                                        background: 'var(--surface)'
+                                    <div key={student.id} className="stu-mobile-card" style={{
+                                        border: '1px solid var(--border)',
+                                        borderRadius: '16px',
+                                        padding: '1.1rem',
+                                        background: 'var(--surface)',
+                                        boxShadow: 'var(--shadow-sm)'
                                     }}>
                                         {/* Student Header */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
@@ -729,7 +789,11 @@ export default function AdminStudents() {
                                                 </div>
                                             )}
                                             <div style={{ flex: 1 }}>
-                                                <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', fontWeight: '700' }}>{student.name}</h4>
+                                                <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+                                                    {student.name}
+                                                    {student.overtime_applicable ? <span style={{ background: '#f59e0b', color: 'white', padding: '1px 4px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>OT</span> : null}
+                                                    {student.first_admission === 1 ? <span style={{ background: '#10b981', color: 'white', padding: '1px 4px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>NEW</span> : null}
+                                                </h4>
                                                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ID: {student.id}</div>
                                             </div>
                                         </div>
@@ -754,10 +818,13 @@ export default function AdminStudents() {
 
                                         {/* Action Buttons */}
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button onClick={() => handleEdit(student)} className="btn btn-sm btn-primary" style={{ flex: 1 }}>
+                                            <button onClick={() => handleEdit(student)} className="btn btn-sm btn-primary stu-action-btn" style={{ flex: 1 }}>
                                                 <Edit2 size={16} /> Edit
                                             </button>
-                                            <button onClick={() => handleDelete(student.id)} className="btn btn-sm btn-outline" style={{ color: 'var(--danger)' }}>
+                                            <button onClick={() => handleToggleStatus(student)} className="btn btn-sm btn-outline stu-action-btn" style={{ color: student.status === 'disabled' ? '#10b981' : '#f59e0b' }}>
+                                                <RefreshCw size={16} />
+                                            </button>
+                                            <button onClick={() => handleDelete(student.id)} className="btn btn-sm btn-outline stu-action-btn" style={{ color: 'var(--danger)' }}>
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>

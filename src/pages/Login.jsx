@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { LogIn, Bell, ShieldCheck, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Login() {
     const [id, setId] = useState('');
@@ -30,6 +31,8 @@ export default function Login() {
             if (userData) {
                 // We let the context handle the state update
                 await login(id, password);
+                
+                toast.success('Successfully logged in!');
 
                 const role = userData.role;
                 if (role === 'super_admin') navigate('/super-admin/dashboard');
@@ -38,7 +41,9 @@ export default function Login() {
                 else navigate('/dashboard');
             }
         } catch (err) {
-            setError(err.message || 'Invalid ID or Password');
+            const errorMsg = err.message || 'Invalid ID or Password';
+            setError(errorMsg);
+            toast.error(errorMsg);
         }
     };
 

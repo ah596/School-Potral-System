@@ -1,155 +1,92 @@
-const sqlite3 = require('sqlite3').verbose();
-const { open } = require('sqlite');
-const path = require('path');
+const mysql = require('mysql2/promise');
 
-let db;
+let pool;
 
 async function initializeDatabase() {
-    db = await open({
-        filename: path.join(__dirname, 'school.db'),
-        driver: sqlite3.Database
+    pool = mysql.createPool({
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASS || '',
+        database: process.env.DB_NAME || 'kgs',
+        port: process.env.DB_PORT || 3306,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
     });
 
-    // Enable foreign keys
-    await db.exec('PRAGMA foreign_keys = ON');
-
-    // Create Users Table (Base table for Auth)
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            password TEXT NOT NULL,
-            name TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('admin', 'teacher', 'student')),
-            email TEXT,
-            photo TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Create Students Table (Extra details)
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS students (
-            id TEXT PRIMARY KEY,
-            grade_level TEXT,
-            attendance_percentage REAL,
-            FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
-        )
-    `);
-
-    // Create Teachers Table (Extra details)
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS teachers (
-            id TEXT PRIMARY KEY,
-            subject TEXT,
-            classes TEXT, -- JSON string of classes
-            salary INTEGER,
-            join_date DATE,
-            FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
-        )
-    `);
-
-    // Create Notices Table
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS notices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            date DATE NOT NULL,
-            content TEXT NOT NULL,
-            priority TEXT CHECK(priority IN ('High', 'Medium', 'Low')),
-            audience TEXT CHECK(audience IN ('all', 'student', 'teacher'))
-        )
-    `);
-
-    // Create Tests Table
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS tests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            subject TEXT NOT NULL,
-            date DATE NOT NULL,
-            total_marks INTEGER NOT NULL,
-            section TEXT,
-            class_name TEXT,
-            teacher_id TEXT,
-            FOREIGN KEY (teacher_id) REFERENCES users(id)
-        )
-    `);
-
-    // Create Marks Table
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS marks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            test_id INTEGER,
-            student_id TEXT,
-            marks_obtained INTEGER,
-            FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE,
-            FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-    `);
-
-    // Create Attendance Table (For Teachers and Students)
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS attendance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            date DATE NOT NULL,
-            status TEXT CHECK(status IN ('present', 'absent')),
-            type TEXT CHECK(type IN ('student', 'teacher')),
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-    `);
-
-    // Create Classes Table
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS classes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL, -- e.g. "Class 10"
-            section TEXT NOT NULL, -- e.g. "A"
-            class_teacher_id TEXT,
-            room_number TEXT,
-            capacity INTEGER DEFAULT 40,
-            FOREIGN KEY (class_teacher_id) REFERENCES users(id)
-        )
-    `);
-
-    // Create Password Resets Table
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS password_resets (
-            email TEXT NOT NULL,
-            token TEXT NOT NULL,
-            expires_at DATETIME NOT NULL
-        )
-    `);
-
-    // Seed Data if empty
-    const userCount = await db.get('SELECT count(*) as count FROM users');
-    if (userCount.count === 0) {
-        console.log('Seeding database...');
-
-        // Admin
-        await db.run(`INSERT INTO users (id, password, name, role, email) VALUES ('ADM001', 'admin123', 'Principal Anderson', 'admin', 'admin@school.com')`);
-
-        // Teacher
-        await db.run(`INSERT INTO users (id, password, name, role, email, photo) VALUES ('TCH001', 'password123', 'Sarah Wilson', 'teacher', 'sarah.wilson@school.com', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80')`);
-        await db.run(`INSERT INTO teachers (id, subject, classes, salary, join_date) VALUES ('TCH001', 'Mathematics', '["Class 10-A", "Class 9-B"]', 5000, '2020-01-15')`);
-
-        // Student
-        await db.run(`INSERT INTO users (id, password, name, role, email, photo) VALUES ('STU001', 'password123', 'Alex Johnson', 'student', 'alex.j@school.com', 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80')`);
-        await db.run(`INSERT INTO students (id, grade_level, attendance_percentage) VALUES ('STU001', 'Class 10', 85.5)`);
-
-        // Notices
-        await db.run(`INSERT INTO notices (title, date, content, priority, audience) VALUES ('Annual Sports Day', '2024-03-15', 'The annual sports day will be held on March 20th. All students must participate.', 'High', 'all')`);
-        await db.run(`INSERT INTO notices (title, date, content, priority, audience) VALUES ('Mid-Term Exams', '2024-04-10', 'Mid-term examinations start from April 15th. Schedule attached.', 'High', 'student')`);
-
-        console.log('Database seeded successfully.');
-    }
+    // Test connection
+    const conn = await pool.getConnection();
+    console.log('MySQL connected successfully to database:', process.env.DB_NAME || 'kgs');
+    conn.release();
 }
 
+// Wrapper that mimics the old SQLite API (db.get, db.all, db.run, db.exec)
 function getDb() {
-    if (!db) {
+    if (!pool) {
         throw new Error('Database not initialized. Call initializeDatabase first.');
     }
-    return db;
+
+    return {
+        // Returns a single row (like SQLite db.get)
+        async get(sql, params = []) {
+            const mysqlSql = convertPlaceholders(sql);
+            const safeParams = params.map(p => p === undefined ? null : p);
+            const [rows] = await pool.execute(mysqlSql, safeParams);
+            return rows[0] || null;
+        },
+
+        // Returns all rows (like SQLite db.all)
+        async all(sql, params = []) {
+            const mysqlSql = convertPlaceholders(sql);
+            const safeParams = params.map(p => p === undefined ? null : p);
+            const [rows] = await pool.execute(mysqlSql, safeParams);
+            return rows;
+        },
+
+        // Executes a query and returns { lastID, changes } (like SQLite db.run)
+        async run(sql, params = []) {
+            const mysqlSql = convertPlaceholders(sql);
+            const safeParams = params.map(p => p === undefined ? null : p);
+            const [result] = await pool.execute(mysqlSql, safeParams);
+            return {
+                lastID: result.insertId,
+                changes: result.affectedRows
+            };
+        },
+
+        // Executes raw SQL (like SQLite db.exec)
+        async exec(sql) {
+            await pool.query(sql);
+        }
+    };
+}
+
+// Convert SQLite ? placeholders - MySQL also uses ? so mostly compatible
+// But we need to handle SQLite-specific syntax differences
+function convertPlaceholders(sql) {
+    // Replace datetime('now') with NOW()
+    sql = sql.replace(/datetime\('now'\)/gi, 'NOW()');
+
+    // Replace SQLite ON CONFLICT(...) DO UPDATE SET ... with MySQL ON DUPLICATE KEY UPDATE ...
+    // Pattern: ON CONFLICT(col) DO UPDATE SET col1=excluded.col1, col2=excluded.col2
+    const conflictMatch = sql.match(/ON\s+CONFLICT\s*\(([^)]+)\)\s+DO\s+UPDATE\s+SET\s+(.+?)$/is);
+    if (conflictMatch) {
+        const updatePart = conflictMatch[2].trim();
+        // Replace excluded.column_name with VALUES(column_name)
+        const mysqlUpdate = updatePart.replace(/excluded\.(\w+)/g, 'VALUES($1)');
+        sql = sql.replace(/ON\s+CONFLICT\s*\([^)]+\)\s+DO\s+UPDATE\s+SET\s+.+$/is, 
+            `ON DUPLICATE KEY UPDATE ${mysqlUpdate}`);
+    }
+
+    // Replace ON CONFLICT(id) DO NOTHING with ON DUPLICATE KEY UPDATE id=id
+    const conflictNothingMatch = sql.match(/ON\s+CONFLICT\s*\((\w+)\)\s+DO\s+NOTHING/i);
+    if (conflictNothingMatch) {
+        const col = conflictNothingMatch[1];
+        sql = sql.replace(/ON\s+CONFLICT\s*\(\w+\)\s+DO\s+NOTHING/i, 
+            `ON DUPLICATE KEY UPDATE ${col}=${col}`);
+    }
+
+    return sql;
 }
 
 module.exports = { initializeDatabase, getDb };

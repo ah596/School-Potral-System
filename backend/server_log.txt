@@ -1,0 +1,3 @@
+Server running on http://localhost:5000
+MySQL connected successfully to database: kgs
+Database initialized

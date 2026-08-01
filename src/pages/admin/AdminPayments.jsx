@@ -77,7 +77,7 @@ export default function AdminPayments() {
                         </div>
                         <div>
                             <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>Total Monthly Payroll</p>
-                            <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem', fontWeight: '800' }}>${totalSalaries.toLocaleString()}</h3>
+                            <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem', fontWeight: '800' }}>Rs {totalSalaries.toLocaleString()}</h3>
                         </div>
                     </div>
                 </div>
@@ -112,7 +112,7 @@ export default function AdminPayments() {
                                     <td>{teacher.id}</td>
                                     <td>{teacher.name}</td>
                                     <td>{teacher.subject}</td>
-                                    <td style={{ fontWeight: '700', color: 'var(--success)' }}>${teacher.salary}</td>
+                                    <td style={{ fontWeight: '700', color: 'var(--success)' }}>Rs {teacher.salary}</td>
                                     <td>
                                         <span className="badge" style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)' }}>
                                             Pending

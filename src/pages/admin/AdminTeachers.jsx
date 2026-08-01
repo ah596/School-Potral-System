@@ -4,6 +4,8 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { api } from '../../utils/api';
 import { auth } from '../../firebase';
 import { Plus, Edit2, Trash2, Save, X, Search, Loader, ArrowLeft, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import LoadingScreen from '../../components/LoadingScreen';
 
 
@@ -48,7 +50,7 @@ export default function AdminTeachers() {
             // This is the source of truth from "Manage Classes"
             const teachersWithClasses = teachersData.map(teacher => {
                 const assigned = classesData
-                    .filter(c => c.classTeacherId === teacher.id)
+                    .filter(c => (c.class_teacher_id || c.classTeacherId) === teacher.id)
                     .map(c => `${c.name} - ${c.section}`);
                 return { ...teacher, assignedClasses: assigned };
             });
@@ -85,7 +87,7 @@ export default function AdminTeachers() {
 
     const handleSave = async () => {
         if (!formData.name || !formData.id) {
-            alert("Name and ID are required");
+            toast.error("Name and ID are required");
             return;
         }
 
@@ -111,7 +113,7 @@ export default function AdminTeachers() {
                 // Convert to Base64 for direct database storage (bypassing Storage bucket for simplicity)
                 // Limit size to 1MB to respect Firestore limits
                 if (selectedFile.size > 1024 * 1024) {
-                    alert("Image too large. Please choose an image under 1MB.");
+                    toast.error("Image too large. Please choose an image under 1MB.");
                     setIsSaving(false);
                     return;
                 }
@@ -127,7 +129,7 @@ export default function AdminTeachers() {
                     photoUrl = await toBase64(selectedFile);
                 } catch (e) {
                     console.error("File reading failed", e);
-                    alert("Failed to read file.");
+                    toast.error("Failed to read file.");
                     setIsSaving(false);
                     return;
                 }
@@ -137,8 +139,10 @@ export default function AdminTeachers() {
 
             if (isAdding) {
                 await api.addTeacher(dataToSave);
+                toast.success('Teacher added successfully!');
             } else {
                 await api.updateTeacher(editingId, dataToSave);
+                toast.success('Teacher updated successfully!');
             }
             setIsAdding(false);
             setEditingId(null);
@@ -146,7 +150,7 @@ export default function AdminTeachers() {
             await loadData();
         } catch (error) {
             console.error('Failed to save teacher:', error);
-            alert(`Failed to save: ${error.message}`);
+            toast.error(`Failed to save: ${error.message}`);
         } finally {
             setIsSaving(false);
         }
@@ -154,13 +158,24 @@ export default function AdminTeachers() {
 
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this teacher?')) {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (result.isConfirmed) {
             try {
                 await api.deleteTeacher(id);
+                toast.success('Teacher deleted successfully!');
                 await loadData();
             } catch (error) {
                 console.error('Failed to delete teacher:', error);
-                alert('Failed to delete teacher');
+                toast.error('Failed to delete teacher');
             }
         }
     };
@@ -183,8 +198,9 @@ export default function AdminTeachers() {
                 details: `Teacher account ${newStatus} by ${user.role}`,
                 timestamp: new Date().toISOString()
             });
+            toast.success(`Teacher ${newStatus === 'active' ? 'unlocked' : 'locked'} successfully!`);
         } catch (error) {
-            alert("Failed to update status: " + error.message);
+            toast.error("Failed to update status: " + error.message);
         }
     };
 
@@ -210,6 +226,15 @@ export default function AdminTeachers() {
 
     return (
         <div className="container" style={{ padding: '0 clamp(1rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem)', maxWidth: '1400px', margin: '0 auto' }}>
+            <style>{`
+                .tch-table tr { transition: background 0.15s; }
+                .tch-table tr:hover td { background: rgba(99,102,241,0.04); }
+                .tch-table td, .tch-table th { padding: 1rem 1.1rem; }
+                .tch-action-btn { transition: all 0.18s; border-radius: 8px; padding: 0.4rem 0.5rem; }
+                .tch-action-btn:hover { transform: scale(1.1); }
+                .tch-mobile-card { transition: box-shadow 0.2s, transform 0.2s; }
+                .tch-mobile-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md) !important; }
+            `}</style>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', padding: '1.5rem 0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
@@ -243,9 +268,12 @@ export default function AdminTeachers() {
                         >
                             <ArrowLeft size={24} />
                         </button>
-                        <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
-                            Manage Teachers
-                        </h2>
+                        <div>
+                            <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.25rem)', fontWeight: '800', margin: 0, color: 'var(--text)' }}>
+                                Manage Teachers
+                            </h2>
+                            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.88rem' }}>{teachers.length} teachers on staff</p>
+                        </div>
                     </div>
                     {!isAdding && (
                         <button onClick={handleAdd} className="btn btn-primary" style={{ whiteSpace: 'nowrap', padding: '0.8rem 1.5rem', borderRadius: '12px' }}>
@@ -277,7 +305,7 @@ export default function AdminTeachers() {
             </div>
 
             {(isAdding || editingId) && (
-                <div className="card" style={{ marginBottom: '2rem' }}>
+                <div className="card" style={{ marginBottom: '2rem', borderLeft: editingId ? '4px solid var(--warning)' : '4px solid var(--primary)', boxShadow: 'var(--shadow-md)' }}>
                     <h3 style={{ marginBottom: '1.5rem' }}>{isAdding ? 'Add New Teacher' : 'Edit Teacher'}</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
                         <div className="form-group">
@@ -398,18 +426,18 @@ export default function AdminTeachers() {
 
                 {/* Desktop Table View */}
                 <div className="teachers-table-responsive table-responsive" style={{ display: 'none' }}>
-                    <table className="table">
+                    <table className="table tch-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Photo</th>
-                                <th>Name</th>
-                                <th>Subject</th>
-                                <th>Classes</th>
-                                <th>Email</th>
-                                <th>Password</th>
-                                <th>Salary</th>
-                                <th>Actions</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Photo</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Classes</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Salary</th>
+                                <th style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))', fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -441,21 +469,16 @@ export default function AdminTeachers() {
                                                 {teacher.password || 'N/A'}
                                             </code>
                                         </td>
-                                        <td>${teacher.salary}</td>
+                                        <td>Rs {teacher.salary}</td>
                                         <td>
-                                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                                <button onClick={() => handleEdit(teacher)} title="Edit" className="btn btn-sm btn-outline">
+                                            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                                <button onClick={() => handleEdit(teacher)} title="Edit" className="btn btn-sm btn-outline tch-action-btn">
                                                     <Edit2 size={16} />
                                                 </button>
-                                                <button
-                                                    onClick={() => handleToggleStatus(teacher)}
-                                                    title={teacher.status === 'disabled' ? 'Enable' : 'Disable'}
-                                                    className="btn btn-sm btn-outline"
-                                                    style={{ color: teacher.status === 'disabled' ? '#10b981' : '#f59e0b' }}
-                                                >
-                                                    <RefreshCw size={16} className={teacher.status === 'disabled' ? '' : 'spin-once'} />
+                                                <button onClick={() => handleToggleStatus(teacher)} title={teacher.status === 'disabled' ? 'Enable' : 'Disable'} className="btn btn-sm btn-outline tch-action-btn" style={{ color: teacher.status === 'disabled' ? '#10b981' : '#f59e0b' }}>
+                                                    <RefreshCw size={16} />
                                                 </button>
-                                                <button onClick={() => handleDelete(teacher.id)} title="Delete" className="btn btn-sm btn-outline" style={{ color: 'var(--danger)' }}>
+                                                <button onClick={() => handleDelete(teacher.id)} title="Delete" className="btn btn-sm btn-outline tch-action-btn" style={{ color: 'var(--danger)' }}>
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
@@ -475,11 +498,12 @@ export default function AdminTeachers() {
                         </p>
                     ) : (
                         filteredTeachers.map(teacher => (
-                            <div key={teacher.id} style={{
-                                border: '2px solid var(--border)',
-                                borderRadius: 'var(--radius)',
-                                padding: '1rem',
-                                background: 'var(--surface)'
+                            <div key={teacher.id} className="tch-mobile-card" style={{
+                                border: '1px solid var(--border)',
+                                borderRadius: '16px',
+                                padding: '1.1rem',
+                                background: 'var(--surface)',
+                                boxShadow: 'var(--shadow-sm)'
                             }}>
                                 {/* Teacher Header */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
@@ -504,7 +528,7 @@ export default function AdminTeachers() {
                                     </div>
                                     <div>
                                         <strong style={{ color: 'var(--text-secondary)' }}>Salary:</strong>
-                                        <div>${teacher.salary}</div>
+                                        <div>Rs {teacher.salary}</div>
                                     </div>
                                     <div style={{ gridColumn: '1 / -1' }}>
                                         <strong style={{ color: 'var(--text-secondary)' }}>Email:</strong>
@@ -524,10 +548,13 @@ export default function AdminTeachers() {
 
                                 {/* Action Buttons */}
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <button onClick={() => handleEdit(teacher)} className="btn btn-sm btn-primary" style={{ flex: 1 }}>
+                                    <button onClick={() => handleEdit(teacher)} className="btn btn-sm btn-primary tch-action-btn" style={{ flex: 1 }}>
                                         <Edit2 size={16} /> Edit
                                     </button>
-                                    <button onClick={() => handleDelete(teacher.id)} className="btn btn-sm btn-outline" style={{ color: 'var(--danger)' }}>
+                                    <button onClick={() => handleToggleStatus(teacher)} className="btn btn-sm btn-outline tch-action-btn" style={{ color: teacher.status === 'disabled' ? '#10b981' : '#f59e0b' }}>
+                                        <RefreshCw size={16} />
+                                    </button>
+                                    <button onClick={() => handleDelete(teacher.id)} className="btn btn-sm btn-outline tch-action-btn" style={{ color: 'var(--danger)' }}>
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
