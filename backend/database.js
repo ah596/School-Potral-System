@@ -3,7 +3,7 @@ const mysql = require('mysql2/promise');
 let pool;
 
 async function initializeDatabase() {
-    pool = mysql.createPool({
+    const dbConfig = {
         host: process.env.DB_HOST || 'localhost',
         user: process.env.DB_USER || 'root',
         password: process.env.DB_PASS || '',
@@ -12,7 +12,15 @@ async function initializeDatabase() {
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0
-    });
+    };
+
+    if (process.env.DB_SSL === 'true') {
+        dbConfig.ssl = {
+            rejectUnauthorized: false
+        };
+    }
+
+    pool = mysql.createPool(dbConfig);
 
     // Test connection
     const conn = await pool.getConnection();
