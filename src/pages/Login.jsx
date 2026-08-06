@@ -287,13 +287,14 @@ export default function Login() {
                     color: #94a3b8;
                     pointer-events: none;
                     z-index: 1;
-                    flex-shrink: 0;
                     display: flex;
                     align-items: center;
+                    height: 100%;
+                    top: 0;
                 }
                 .login-input {
                     width: 100%;
-                    padding: 0.875rem 1rem 0.875rem 3rem;
+                    padding: 0.875rem 1rem 0.875rem 2.75rem;
                     border: 1px solid #e2e8f0;
                     border-radius: 8px;
                     font-size: 0.95rem;
@@ -301,8 +302,6 @@ export default function Login() {
                     transition: all 0.2s;
                     background: #f8fafc;
                     box-sizing: border-box;
-                    box-shadow: none;
-                    outline: none;
                 }
                 .login-input:-webkit-autofill,
                 .login-input:-webkit-autofill:hover,
@@ -504,7 +503,7 @@ export default function Login() {
                             <div className="form-group">
                                 <label className="form-label">User ID or Email</label>
                                 <div className="input-wrap">
-                                    <User size={18} className="input-icon" />
+                                    <span className="input-icon"><User size={18} /></span>
                                     <input 
                                         type="text" 
                                         className="login-input" 
@@ -522,7 +521,7 @@ export default function Login() {
                                     <a href="#" style={{ color: '#4f46e5', textDecoration: 'none', fontSize: '0.8rem' }} onClick={(e) => { e.preventDefault(); toast('Password reset link sent to your admin.'); }}>Forgot Password?</a>
                                 </div>
                                 <div className="input-wrap">
-                                    <Lock size={18} className="input-icon" />
+                                    <span className="input-icon"><Lock size={18} /></span>
                                     <input 
                                         type={showPassword ? "text" : "password"}
                                         className="login-input" 
