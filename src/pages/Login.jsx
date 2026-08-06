@@ -283,7 +283,7 @@ export default function Login() {
                 }
                 .input-icon {
                     position: absolute;
-                    left: 0.75rem;
+                    left: 0.875rem;
                     color: #94a3b8;
                     pointer-events: none;
                     z-index: 1;
@@ -291,7 +291,7 @@ export default function Login() {
                 }
                 .login-input {
                     width: 100%;
-                    padding: 0.875rem 1rem 0.875rem 2.75rem;
+                    padding: 0.875rem 1rem 0.875rem 3rem;
                     border: 1px solid #e2e8f0;
                     border-radius: 8px;
                     font-size: 0.95rem;
@@ -481,7 +481,7 @@ export default function Login() {
                 <div className="form-container">
                     <div className="login-card">
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-                            <img src="/logo.png" alt="School Logo" style={{ width: '2rem', height: '2rem', objectFit: 'contain' }} />
+                            <img src="/logo.png" alt="School Logo" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} />
                             <h2 className="login-title" style={{ margin: 0 }}>Sign In</h2>
                         </div>
                         <p className="login-subtitle">Enter your credentials to access the portal</p>
