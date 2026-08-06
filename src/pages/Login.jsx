@@ -283,11 +283,13 @@ export default function Login() {
                 }
                 .input-icon {
                     position: absolute;
-                    left: 0.875rem;
+                    left: 1rem;
                     color: #94a3b8;
                     pointer-events: none;
                     z-index: 1;
                     flex-shrink: 0;
+                    display: flex;
+                    align-items: center;
                 }
                 .login-input {
                     width: 100%;
@@ -299,6 +301,8 @@ export default function Login() {
                     transition: all 0.2s;
                     background: #f8fafc;
                     box-sizing: border-box;
+                    box-shadow: none;
+                    outline: none;
                 }
                 .login-input:-webkit-autofill,
                 .login-input:-webkit-autofill:hover,
