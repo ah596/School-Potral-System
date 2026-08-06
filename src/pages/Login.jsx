@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { LogIn, Bell, ShieldCheck, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Bell, Eye, EyeOff, ArrowLeft, ArrowRight, User, Lock, GraduationCap, LogIn } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
@@ -12,7 +12,6 @@ export default function Login() {
     const [error, setError] = useState('');
     const [notices, setNotices] = useState([]);
     const [selectedNotice, setSelectedNotice] = useState(null);
-    const [showDemo, setShowDemo] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -29,11 +28,8 @@ export default function Login() {
         try {
             const userData = await api.login(id, password);
             if (userData) {
-                // We let the context handle the state update
                 await login(id, password);
-                
                 toast.success('Successfully logged in!');
-
                 const role = userData.role;
                 if (role === 'super_admin') navigate('/super-admin/dashboard');
                 else if (role === 'admin') navigate('/admin/dashboard');
@@ -47,114 +43,379 @@ export default function Login() {
         }
     };
 
-    const getPriorityColor = (priority) => {
-        switch (priority) {
-            case 'high': return '#ef4444';
-            case 'medium': return '#f59e0b';
-            case 'low': return '#10b981';
-            default: return '#6b7280';
-        }
-    };
-
     return (
-        <div className="login-page">
+        <div className="split-layout">
             <style>{`
-                .login-page {
+                :root {
+                    --brand-dark: #1e293b;
+                    --brand-blue: #1e1b4b; /* Deep blue from mockup */
+                    --brand-blue-hover: #312e81;
+                }
+                .split-layout {
+                    display: flex;
                     min-height: 100vh;
+                    font-family: 'Inter', system-ui, sans-serif;
+                    background: #f8fafc;
+                }
+                
+                /* Left Side - Visuals */
+                .split-left {
+                    flex: 1.1;
+                    position: relative;
+                    background-image: url('/campus-bg.png');
+                    background-size: cover;
+                    background-position: center;
+                    display: flex;
+                    flex-direction: column;
+                    color: white;
+                }
+                .left-overlay {
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(135deg, rgba(30, 27, 75, 0.8) 0%, rgba(30, 27, 75, 0.4) 100%);
+                    z-index: 1;
+                }
+                .left-content {
+                    position: relative;
+                    z-index: 2;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 3rem;
+                    height: 100%;
+                }
+                .brand-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    margin-bottom: auto;
+                    background: white;
+                    color: var(--brand-dark);
+                    width: fit-content;
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                }
+                
+                .welcome-section {
+                    margin-bottom: 3rem;
+                    max-width: 600px;
+                }
+                .welcome-title {
+                    font-size: 3.5rem;
+                    font-weight: 800;
+                    line-height: 1.1;
+                    margin: 0 0 1rem 0;
+                    letter-spacing: -0.02em;
+                }
+                .welcome-subtitle {
+                    font-size: 1.125rem;
+                    color: rgba(255, 255, 255, 0.85);
+                    line-height: 1.6;
+                    margin: 0;
+                }
+
+                /* Glass Notice Board */
+                .glass-board {
+                    background: rgba(255, 255, 255, 0.1);
+                    backdrop-filter: blur(16px);
+                    -webkit-backdrop-filter: blur(16px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 16px;
+                    padding: 2rem;
+                    max-width: 600px;
+                }
+                .glass-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1.5rem;
+                    padding-bottom: 1rem;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                }
+                .glass-header h3 {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    margin: 0;
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                }
+                .new-badge {
+                    background: rgba(255, 255, 255, 0.15);
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    letter-spacing: 0.05em;
+                }
+                .notice-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.25rem;
+                }
+                .notice-row {
+                    display: flex;
+                    gap: 1.5rem;
+                    align-items: flex-start;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                }
+                .notice-row:hover {
+                    transform: translateX(4px);
+                }
+                .notice-date-block {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    min-width: 45px;
+                }
+                .notice-day {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    line-height: 1;
+                }
+                .notice-month {
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    color: rgba(255, 255, 255, 0.7);
+                    margin-top: 2px;
+                }
+                .notice-content {
+                    flex: 1;
+                }
+                .notice-tag {
+                    font-size: 0.65rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    color: rgba(255, 255, 255, 0.6);
+                    margin-bottom: 4px;
+                    display: block;
+                }
+                .notice-title {
+                    margin: 0;
+                    font-size: 1rem;
+                    font-weight: 500;
+                    color: white;
+                }
+                .view-all {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-top: 2rem;
+                    color: rgba(255, 255, 255, 0.9);
+                    text-decoration: none;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                    transition: color 0.2s;
+                    cursor: pointer;
+                }
+                .view-all:hover {
+                    color: white;
+                }
+
+                /* Right Side - Form */
+                .split-right {
+                    flex: 0.9;
+                    background: white;
+                    display: flex;
+                    flex-direction: column;
+                    position: relative;
+                }
+                .form-container {
+                    flex: 1;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: var(--background);
-                    padding: 2rem 1rem;
+                    padding: 2rem;
+                }
+                .login-card {
+                    width: 100%;
+                    max-width: 420px;
+                    background: white;
+                    border-radius: 16px;
+                    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+                    border: 1px solid rgba(0,0,0,0.05);
+                    padding: 3rem 2.5rem;
+                }
+                .login-icon-wrap {
+                    width: 56px;
+                    height: 56px;
+                    background: #eef2ff;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 1.5rem;
+                    color: #4f46e5;
+                }
+                .login-title {
+                    text-align: center;
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: var(--brand-dark);
+                    margin: 0 0 0.5rem 0;
+                }
+                .login-subtitle {
+                    text-align: center;
+                    color: #64748b;
+                    font-size: 0.95rem;
+                    margin: 0 0 2.5rem 0;
+                }
+                .form-group {
+                    margin-bottom: 1.5rem;
+                }
+                .form-label {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 0.5rem;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: var(--brand-dark);
+                }
+                .input-wrap {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+                .input-icon {
+                    position: absolute;
+                    left: 1rem;
+                    color: #94a3b8;
+                }
+                .login-input {
+                    width: 100%;
+                    padding: 0.875rem 1rem 0.875rem 3rem;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    font-size: 0.95rem;
+                    color: var(--brand-dark);
+                    transition: all 0.2s;
+                    background: #f8fafc;
+                }
+                .login-input:focus {
+                    outline: none;
+                    border-color: #4f46e5;
+                    background: white;
+                    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+                }
+                .input-action {
+                    position: absolute;
+                    right: 1rem;
+                    background: none;
+                    border: none;
+                    color: #94a3b8;
+                    cursor: pointer;
+                    padding: 0;
+                    display: flex;
+                }
+                .remember-wrap {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-bottom: 2rem;
+                }
+                .remember-wrap input[type="checkbox"] {
+                    width: 16px;
+                    height: 16px;
+                    accent-color: var(--brand-blue);
+                    cursor: pointer;
+                }
+                .remember-wrap label {
+                    font-size: 0.875rem;
+                    color: #64748b;
+                    cursor: pointer;
+                }
+                .submit-btn {
+                    width: 100%;
+                    padding: 1rem;
+                    background: var(--brand-blue);
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                }
+                .submit-btn:hover {
+                    background: var(--brand-blue-hover);
+                }
+                .help-link {
+                    text-align: center;
+                    margin-top: 1.5rem;
+                    font-size: 0.875rem;
+                    color: #64748b;
+                }
+                .help-link a {
+                    color: #4f46e5;
+                    text-decoration: none;
+                    font-weight: 500;
+                }
+                .help-link a:hover {
+                    text-decoration: underline;
                 }
 
-                .cards-wrapper {
-                    display: flex;
-                    width: 100%;
-                    max-width: 960px; /* Limit max width for better aesthetic */
-                    gap: 2rem;
-                }
-                
-                .campus-card, .login-form-card {
-                    width: 100%;
-                    max-width: 480px; /* Ensure they don't get too wide individually */
+                .login-footer {
                     padding: 1.5rem;
-                    border-radius: var(--radius);
-                    box-shadow: var(--shadow-md);
-                    border: 1px solid var(--border);
-                    background: var(--surface);
+                    text-align: center;
+                    font-size: 0.75rem;
+                    color: #94a3b8;
+                    background: #f8fafc;
                     display: flex;
-                    flex-direction: column;
+                    justify-content: center;
+                    gap: 1.5rem;
                 }
-                
-                .login-form-card {
-                    padding: 2.5rem;
-                    box-shadow: var(--shadow-lg);
+                .login-footer span, .login-footer a {
+                    color: #94a3b8;
+                    text-decoration: none;
                 }
-
-                /* Desktop Styles */
-                @media (min-width: 969px) {
-                    .cards-wrapper {
-                        flex-direction: row;
-                        align-items: flex-start; /* IMPORTANT: Align top, allow independent height */
-                    }
-                    
-                    .campus-card {
-                        flex: 1;
-                        height: 640px; /* Increased to ensure Login card starts at same visual height */
-                    }
-
-                    .login-form-card {
-                        flex: 1;
-                        min-height: 640px; /* Start at same height */
-                        height: auto; /* Allow growth */
-                    }
-
-                    .campus-scroll-area {
-                        max-height: 640px;
-                    }
+                .login-footer a:hover {
+                    color: var(--brand-dark);
                 }
 
-                /* Mobile Styles */
-                @media (max-width: 968px) {
-                    .cards-wrapper {
+                /* Mobile Responsiveness */
+                @media (max-width: 992px) {
+                    .split-layout {
                         flex-direction: column;
-                        align-items: center;
                     }
-                    
-                    .campus-card {
-                        max-height: 450px;
+                    .split-left {
+                        flex: none;
+                        min-height: 100vh;
                     }
-                    
-                    .login-form-card {
-                        height: auto;
+                    .split-right {
+                        flex: none;
+                        min-height: 100vh;
                     }
+                }
+                @media (max-width: 480px) {
+                    .left-content { padding: 1.5rem; }
+                    .welcome-title { font-size: 2.5rem; }
+                    .glass-board { padding: 1.5rem; }
+                    .login-card { padding: 2rem 1.5rem; border-radius: 0; border: none; box-shadow: none; }
                 }
             `}</style>
 
-            <div className="cards-wrapper">
-                {/* Campus Update Board Card */}
-                <div className="campus-card">
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        marginBottom: '1rem',
-                        paddingBottom: '0.75rem',
-                        borderBottom: '1px solid var(--border)'
-                    }}>
-                        <div style={{
-                            padding: '0.5rem',
-                            background: 'rgba(99, 102, 241, 0.1)',
-                            borderRadius: '50%',
-                            color: 'var(--primary)'
-                        }}>
-                            <Bell size={20} />
-                        </div>
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold' }}>Campus Updates</h3>
+            <div className="split-left">
+                <div className="left-overlay"></div>
+                <div className="left-content">
+                    
+                    <div className="brand-header">
+                        <GraduationCap size={24} color="#4f46e5" />
+                        School Portal
                     </div>
 
-                    <div className="campus-scroll-area" style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
+                    <div className="welcome-section">
+                        <h1 className="welcome-title">Welcome to your Digital Campus.</h1>
+                        <p className="welcome-subtitle">
+                            Access your courses, connect with peers, and manage your academic journey from one central hub.
+                        </p>
+                    </div>
+
+                    <div className="glass-board">
                         {selectedNotice ? (
                             <div className="notice-detail animate-fade-in">
                                 <button
@@ -162,194 +423,153 @@ export default function Login() {
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '0.5rem',
                                         background: 'transparent', border: 'none',
-                                        color: 'var(--text-muted)', cursor: 'pointer',
-                                        marginBottom: '1rem', fontSize: '0.9rem', fontWeight: '500'
+                                        color: 'rgba(255,255,255,0.8)', cursor: 'pointer',
+                                        marginBottom: '1rem', fontSize: '0.9rem', padding: 0
                                     }}
                                 >
                                     <ArrowLeft size={16} /> Back to Updates
                                 </button>
-
-                                <div style={{ borderLeft: `3px solid ${getPriorityColor(selectedNotice.priority)}`, paddingLeft: '1rem' }}>
-                                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>{selectedNotice.title}</h4>
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>
+                                <div>
+                                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>{selectedNotice.title}</h4>
+                                    <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', display: 'block', marginBottom: '1rem' }}>
                                         {selectedNotice.date}
                                     </span>
-                                    <p style={{ fontSize: '0.95rem', lineHeight: '1.6', whiteSpace: 'pre-wrap', color: 'var(--text-main)' }}>
+                                    <p style={{ fontSize: '0.95rem', lineHeight: '1.6', whiteSpace: 'pre-wrap', color: 'rgba(255,255,255,0.9)' }}>
                                         {selectedNotice.content}
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                {notices.length === 0 ? (
-                                    <p style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                                        No updates available.
-                                    </p>
-                                ) : (
-                                    notices.map((notice) => (
-                                        <div
-                                            key={notice.id}
-                                            onClick={() => setSelectedNotice(notice)}
-                                            style={{
-                                                padding: '0.75rem',
-                                                background: 'var(--background)',
-                                                borderRadius: '0.5rem',
-                                                cursor: 'pointer',
-                                                borderLeft: `3px solid ${getPriorityColor(notice.priority)}`,
-                                                transition: 'all 0.2s',
-                                                border: '1px solid transparent',
-                                                borderLeftWidth: '3px'
-                                            }}
-                                            className="notice-item-hover"
-                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.05)'}
-                                            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--background)'}
-                                        >
-                                            <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--text-main)' }}>{notice.title}</h5>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{notice.date}</span>
-                                                <span style={{ fontSize: '0.75rem', color: '#6366f1', fontWeight: '500' }}>Read More</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                            <>
+                                <div className="glass-header">
+                                    <h3><Bell size={20} /> Notice Board</h3>
+                                    <span className="new-badge">{notices.length} New</span>
+                                </div>
+                                
+                                <div className="notice-list">
+                                    {notices.length === 0 ? (
+                                        <p style={{ color: 'rgba(255,255,255,0.7)' }}>No notices available.</p>
+                                    ) : (
+                                        notices.slice(0, 3).map((notice, idx) => {
+                                            // Mock parsing date to Day/Month for UI
+                                            const d = new Date(notice.date || notice.timestamp || Date.now());
+                                            const day = d.getDate();
+                                            const month = d.toLocaleString('en-US', { month: 'short' });
+                                            // Extract tag based on title or random for aesthetic
+                                            let tag = "ACADEMIC";
+                                            if (notice.title.toLowerCase().includes('fee') || notice.title.toLowerCase().includes('admin')) tag = "ADMIN";
+                                            else if (notice.title.toLowerCase().includes('event') || notice.title.toLowerCase().includes('party')) tag = "SOCIAL";
+                                            else if (notice.priority === 'high') tag = "URGENT";
+
+                                            return (
+                                                <div key={idx} className="notice-row" onClick={() => setSelectedNotice(notice)}>
+                                                    <div className="notice-date-block">
+                                                        <span className="notice-day">{day}</span>
+                                                        <span className="notice-month">{month}</span>
+                                                    </div>
+                                                    <div className="notice-content">
+                                                        <span className="notice-tag">{tag}</span>
+                                                        <h4 className="notice-title">{notice.title}</h4>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })
+                                    )}
+                                </div>
+                                <div className="view-all" onClick={() => {
+                                    // Normally would link to a dedicated notices page or open modal
+                                    toast('Please login to view all notices', { icon: '🔔' });
+                                }}>
+                                    View All Notices <ArrowRight size={16} />
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>
+            </div>
 
-                {/* Login Form Card */}
-                <div className="login-form-card">
-                    <div className="login-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <div className="split-right">
+                <div className="form-container">
+                    <div className="login-card">
+                        <div className="login-icon-wrap">
+                            <LogIn size={28} />
+                        </div>
+                        <h2 className="login-title">Sign In</h2>
+                        <p className="login-subtitle">Enter your credentials to access the portal</p>
+                        
+                        {error && (
                             <div style={{
-                                width: '100px', height: '100px',
-                                background: 'white',
-                                borderRadius: '24px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                boxShadow: 'var(--shadow-lg)',
-                                padding: '12px'
+                                background: '#fee2e2', color: '#ef4444',
+                                padding: '0.75rem', borderRadius: '8px', fontSize: '0.875rem',
+                                marginBottom: '1.5rem', textAlign: 'center', fontWeight: '500'
                             }}>
-                                <img src="/logo.png" alt="School Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                            </div>
-                        </div>
-                        <h2 style={{
-                            fontSize: '2rem',
-                            fontWeight: '800',
-                            marginBottom: '0.5rem',
-                            background: 'linear-gradient(135deg, var(--text-main), var(--primary))',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                            color: 'transparent'
-                        }}>Welcome Back</h2>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Sign in to access your portal</p>
-                    </div>
-
-                    {error && (
-                        <div style={{
-                            background: '#fee2e2', color: '#ef4444',
-                            padding: '1rem', borderRadius: 'var(--radius)',
-                            marginBottom: '1.5rem', textAlign: 'center',
-                            border: '1px solid #fecaca'
-                        }}>
-                            {error}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                            <label htmlFor="id" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>User ID</label>
-                            <input
-                                type="text"
-                                id="id"
-                                value={id}
-                                onChange={(e) => setId(e.target.value)}
-                                placeholder="e.g., STU001 or TCH001"
-                                required
-                                style={{
-                                    width: '100%', padding: '0.9rem 1rem',
-                                    border: '2px solid var(--border)', borderRadius: 'var(--radius)',
-                                    background: 'var(--background)', color: 'var(--text-main)', fontSize: '1rem'
-                                }}
-                            />
-                        </div>
-                        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                <label htmlFor="password" style={{ marginBottom: 0, fontWeight: '600', color: 'var(--text-main)' }}>Password</label>
-                                <Link to="/forgot-password" style={{ fontSize: '0.85rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: '500' }}>
-                                    Forgot Password?
-                                </Link>
-                            </div>
-                            <div style={{ position: 'relative' }}>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    id="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Enter your password"
-                                    required
-                                    style={{
-                                        width: '100%', padding: '0.9rem 1rem', paddingRight: '40px',
-                                        border: '2px solid var(--border)', borderRadius: 'var(--radius)',
-                                        background: 'var(--background)', color: 'var(--text-main)', fontSize: '1rem'
-                                    }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    style={{
-                                        position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                                        background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
-                                        padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                    }}
-                                >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                </button>
-                            </div>
-                        </div>
-                        <button type="submit" className="btn btn-primary btn-block" style={{ width: '100%', padding: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none', borderRadius: 'var(--radius)', color: 'white', fontWeight: 'bold', cursor: 'pointer', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', fontSize: '1.05rem' }}>
-                            <LogIn className="icon-sm" size={18} />
-                            <span>Sign In</span>
-                        </button>
-                    </form>
-
-                    <div style={{ marginTop: 'auto', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                        <button
-                            onClick={() => {
-                                setId('SUPER001');
-                                setPassword('superadmin123');
-                            }}
-                            style={{ width: '100%', marginBottom: '1rem', padding: '0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--primary)', background: 'transparent', color: 'var(--primary)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                        >
-                            <ShieldCheck size={18} />
-                            Super Admin Portal
-                        </button>
-
-                        <button
-                            onClick={() => setShowDemo(!showDemo)}
-                            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '1rem', fontWeight: '600', textDecoration: 'underline', padding: '0.75rem' }}
-                        >
-                            {showDemo ? 'Hide Login Info' : 'Show Login Info'}
-                        </button>
-
-                        {showDemo && (
-                            <div className="demo-credentials animate-fade-in" style={{ marginTop: '1rem', padding: '1rem', background: 'var(--background)', borderRadius: 'var(--radius)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', border: '1px dashed var(--border)', width: '100%' }}>
-                                <p style={{ marginBottom: '0.5rem', fontWeight: '600' }}>Demo Credentials:</p>
-                                <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                                    <span>Student: <strong>STU001</strong></span>
-                                    <span>Teacher: <strong>TCH001</strong></span>
-                                </div>
-                                <div style={{ textAlign: 'center', fontSize: '0.85rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                                    <span>Admin: <strong>ADM001</strong></span>
-                                    <span>Super Admin: <strong>SUPER001</strong></span>
-                                </div>
-                                <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', textAlign: 'center' }}>
-                                    Password: <strong>password123</strong> (S/T) | <strong>admin123</strong> (Admin) | <strong>superadmin123</strong> (Super)
-                                </div>
+                                {error}
                             </div>
                         )}
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">User ID or Email</label>
+                                <div className="input-wrap">
+                                    <User size={18} className="input-icon" />
+                                    <input 
+                                        type="text" 
+                                        className="login-input" 
+                                        placeholder="e.g. student@school.edu" 
+                                        value={id}
+                                        onChange={(e) => setId(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="form-group">
+                                <div className="form-label">
+                                    <span>Password</span>
+                                    <a href="#" style={{ color: '#4f46e5', textDecoration: 'none', fontSize: '0.8rem' }} onClick={(e) => { e.preventDefault(); toast('Password reset link sent to your admin.'); }}>Forgot Password?</a>
+                                </div>
+                                <div className="input-wrap">
+                                    <Lock size={18} className="input-icon" />
+                                    <input 
+                                        type={showPassword ? "text" : "password"}
+                                        className="login-input" 
+                                        placeholder="••••••••" 
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                    <button 
+                                        type="button" 
+                                        className="input-action"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="remember-wrap">
+                                <input type="checkbox" id="remember" />
+                                <label htmlFor="remember">Remember me on this device</label>
+                            </div>
+
+                            <button type="submit" className="submit-btn">
+                                Sign In
+                            </button>
+                        </form>
+
+                        <div className="help-link">
+                            Need help accessing your account?<br />
+                            <a href="#" onClick={(e) => { e.preventDefault(); toast('Please contact support@school.edu'); }}>Contact IT Support</a>
+                        </div>
                     </div>
                 </div>
+
+                <footer className="login-footer">
+                    <span>© 2024 School Portal. All rights reserved.</span>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </footer>
             </div>
         </div>
     );
