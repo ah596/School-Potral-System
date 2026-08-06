@@ -83,6 +83,7 @@ export default function Login() {
                     flex-direction: column;
                     padding: 3rem;
                     height: 100%;
+                    justify-content: space-between;
                 }
                 .brand-header {
                     display: flex;
@@ -96,11 +97,10 @@ export default function Login() {
                     width: fit-content;
                     padding: 0.5rem 1rem;
                     border-radius: 8px;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                 }
                 
                 .welcome-section {
-                    margin-bottom: 3rem;
+                    margin-bottom: 1.5rem;
                     max-width: 600px;
                 }
                 .welcome-title {
@@ -122,7 +122,7 @@ export default function Login() {
                     background: rgba(255, 255, 255, 0.1);
                     backdrop-filter: blur(16px);
                     -webkit-backdrop-filter: blur(16px);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border: 1.5px solid #000;
                     border-radius: 16px;
                     padding: 2rem;
                     max-width: 600px;
@@ -155,7 +155,7 @@ export default function Login() {
                     display: flex;
                     flex-direction: column;
                     gap: 1.25rem;
-                    max-height: 350px;
+                    max-height: 220px;
                     overflow-y: auto;
                     padding-right: 0.5rem;
                 }
@@ -231,6 +231,7 @@ export default function Login() {
                     display: flex;
                     flex-direction: column;
                     position: relative;
+                    justify-content: center;
                 }
                 .form-container {
                     flex: 1;
@@ -238,6 +239,7 @@ export default function Login() {
                     align-items: center;
                     justify-content: center;
                     padding: 2rem;
+                    overflow-y: auto;
                 }
                 .login-card {
                     width: 100%;
@@ -411,9 +413,11 @@ export default function Login() {
                 <div className="left-overlay"></div>
                 <div className="left-content">
                     
-                    <div className="brand-header">
-                        <GraduationCap size={24} color="#4f46e5" />
-                        School Portal
+                    <div>
+                        <div className="brand-header">
+                            <GraduationCap size={24} color="#4f46e5" />
+                            School Portal
+                        </div>
                     </div>
 
                     <div className="welcome-section">
@@ -484,9 +488,9 @@ export default function Login() {
                                         })
                                     )}
                                 </div>
-                                {!showAllNotices && notices.length > 3 && (
-                                    <div className="view-all" onClick={() => setShowAllNotices(true)}>
-                                        View All Notices <ArrowRight size={16} />
+                                {notices.length > 3 && (
+                                    <div className="view-all" onClick={() => setShowAllNotices(!showAllNotices)}>
+                                        {showAllNotices ? 'Show Less' : 'View All Notices'} <ArrowRight size={16} />
                                     </div>
                                 )}
                             </>
