@@ -479,10 +479,10 @@ export default function Login() {
             <div className="split-right">
                 <div className="form-container">
                     <div className="login-card">
-                        <div className="login-icon-wrap">
-                            <img src="/logo.png" alt="School Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+                            <img src="/logo.png" alt="School Logo" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+                            <h2 className="login-title" style={{ margin: 0 }}>Sign In</h2>
                         </div>
-                        <h2 className="login-title">Sign In</h2>
                         <p className="login-subtitle">Enter your credentials to access the portal</p>
                         
                         {error && (
