@@ -91,12 +91,8 @@ export default function Login() {
                     gap: 0.75rem;
                     font-size: 1.25rem;
                     font-weight: 700;
-                    margin-bottom: auto;
-                    background: white;
-                    color: var(--brand-dark);
+                    color: white;
                     width: fit-content;
-                    padding: 0.5rem 1rem;
-                    border-radius: 8px;
                 }
                 
                 .welcome-section {
@@ -122,7 +118,7 @@ export default function Login() {
                     background: rgba(255, 255, 255, 0.1);
                     backdrop-filter: blur(16px);
                     -webkit-backdrop-filter: blur(16px);
-                    border: 1.5px solid #000;
+                    border: none;
                     border-radius: 16px;
                     padding: 2rem;
                     max-width: 600px;
@@ -298,13 +294,21 @@ export default function Login() {
                 }
                 .login-input {
                     width: 100%;
-                    padding: 0.875rem 1rem 0.875rem 3rem;
+                    padding: 0.875rem 1rem 0.875rem 2.75rem;
                     border: 1px solid #e2e8f0;
                     border-radius: 8px;
                     font-size: 0.95rem;
                     color: var(--brand-dark);
                     transition: all 0.2s;
                     background: #f8fafc;
+                    box-sizing: border-box;
+                }
+                .login-input:-webkit-autofill,
+                .login-input:-webkit-autofill:hover,
+                .login-input:-webkit-autofill:focus {
+                    -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset;
+                    box-shadow: 0 0 0px 1000px #f8fafc inset;
+                    border: 1px solid #e2e8f0;
                 }
                 .login-input:focus {
                     outline: none;
@@ -415,7 +419,7 @@ export default function Login() {
                     
                     <div>
                         <div className="brand-header">
-                            <GraduationCap size={24} color="#4f46e5" />
+                            <GraduationCap size={24} color="white" />
                             School Portal
                         </div>
                     </div>
