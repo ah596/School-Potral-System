@@ -481,7 +481,7 @@ export default function Login() {
                 <div className="form-container">
                     <div className="login-card">
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-                            <img src="/logo.png" alt="School Logo" style={{ width: '2.2rem', height: '2.2rem', objectFit: 'contain' }} />
+                            <img src="/logo.png" alt="School Logo" style={{ width: '4rem', height: '4rem', objectFit: 'contain' }} />
                             <h2 className="login-title" style={{ margin: 0 }}>Sign In</h2>
                         </div>
                         <p className="login-subtitle">Enter your credentials to access the portal</p>
