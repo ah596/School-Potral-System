@@ -84,21 +84,12 @@ export default function Login() {
                     z-index: 2;
                     display: flex;
                     flex-direction: column;
-                    padding: 2rem 3rem;
+                    padding: 2rem 3rem 2.5rem;
                     height: 100%;
                     justify-content: space-between;
                     overflow: hidden;
                 }
-                .brand-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    font-size: 1.25rem;
-                    font-weight: 700;
-                    color: white;
-                    width: fit-content;
-                }
-                
+
                 .welcome-section {
                     margin-bottom: 1.5rem;
                     max-width: 600px;
@@ -293,12 +284,14 @@ export default function Login() {
                 }
                 .input-icon {
                     position: absolute;
-                    left: 1rem;
+                    left: 0.875rem;
                     color: #94a3b8;
+                    pointer-events: none;
+                    z-index: 1;
                 }
                 .login-input {
                     width: 100%;
-                    padding: 0.875rem 1rem 0.875rem 2.75rem;
+                    padding: 0.875rem 1rem 0.875rem 3.25rem;
                     border: 1px solid #e2e8f0;
                     border-radius: 8px;
                     font-size: 0.95rem;
@@ -377,25 +370,7 @@ export default function Login() {
                     text-decoration: underline;
                 }
 
-                .login-footer {
-                    padding: 1.5rem;
-                    text-align: center;
-                    font-size: 0.75rem;
-                    color: #94a3b8;
-                    background: #f8fafc;
-                    display: flex;
-                    justify-content: center;
-                    gap: 1.5rem;
-                }
-                .login-footer span, .login-footer a {
-                    color: #94a3b8;
-                    text-decoration: none;
-                }
-                .login-footer a:hover {
-                    color: var(--brand-dark);
-                }
-
-                /* Mobile Responsiveness */
+/* Mobile Responsiveness */
                 @media (max-width: 992px) {
                     .split-layout {
                         flex-direction: column;
@@ -423,13 +398,6 @@ export default function Login() {
                 <div className="left-overlay"></div>
                 <div className="left-content">
                     
-                    <div>
-                        <div className="brand-header">
-                            <GraduationCap size={24} color="white" />
-                            School Portal
-                        </div>
-                    </div>
-
                     <div className="welcome-section">
                         <h1 className="welcome-title">Welcome to your Digital Campus.</h1>
                         <p className="welcome-subtitle">
@@ -586,11 +554,7 @@ export default function Login() {
                     </div>
                 </div>
 
-                <footer className="login-footer">
-                    <span>© 2024 School Portal. All rights reserved.</span>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                </footer>
+
             </div>
         </div>
     );
