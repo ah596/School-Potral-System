@@ -242,15 +242,14 @@ export default function Login() {
                     padding: 2rem 2.5rem;
                 }
                 .login-icon-wrap {
-                    width: 48px;
-                    height: 48px;
+                    width: 56px;
+                    height: 56px;
                     background: #eef2ff;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     margin: 0 auto 1rem;
-                    color: #4f46e5;
                 }
                 .login-title {
                     text-align: center;
@@ -481,7 +480,7 @@ export default function Login() {
                 <div className="form-container">
                     <div className="login-card">
                         <div className="login-icon-wrap">
-                            <LogIn size={28} />
+                            <img src="/logo.png" alt="School Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
                         </div>
                         <h2 className="login-title">Sign In</h2>
                         <p className="login-subtitle">Enter your credentials to access the portal</p>
