@@ -54,7 +54,9 @@ export default function Login() {
                 }
                 .split-layout {
                     display: flex;
-                    min-height: 100vh;
+                    height: 100vh;
+                    max-height: 100vh;
+                    overflow: hidden;
                     font-family: 'Inter', system-ui, sans-serif;
                     background: #f8fafc;
                 }
@@ -69,6 +71,7 @@ export default function Login() {
                     display: flex;
                     flex-direction: column;
                     color: white;
+                    overflow: hidden;
                 }
                 .left-overlay {
                     position: absolute;
@@ -81,9 +84,10 @@ export default function Login() {
                     z-index: 2;
                     display: flex;
                     flex-direction: column;
-                    padding: 3rem;
+                    padding: 2rem 3rem;
                     height: 100%;
                     justify-content: space-between;
+                    overflow: hidden;
                 }
                 .brand-header {
                     display: flex;
@@ -100,10 +104,10 @@ export default function Login() {
                     max-width: 600px;
                 }
                 .welcome-title {
-                    font-size: 3.5rem;
+                    font-size: 2.8rem;
                     font-weight: 800;
                     line-height: 1.1;
-                    margin: 0 0 1rem 0;
+                    margin: 0 0 0.75rem 0;
                     letter-spacing: -0.02em;
                 }
                 .welcome-subtitle {
@@ -120,7 +124,7 @@ export default function Login() {
                     -webkit-backdrop-filter: blur(16px);
                     border: none;
                     border-radius: 16px;
-                    padding: 2rem;
+                    padding: 1.25rem 1.5rem;
                     max-width: 600px;
                 }
                 .glass-header {
@@ -150,8 +154,8 @@ export default function Login() {
                 .notice-list {
                     display: flex;
                     flex-direction: column;
-                    gap: 1.25rem;
-                    max-height: 220px;
+                    gap: 0.85rem;
+                    max-height: 160px;
                     overflow-y: auto;
                     padding-right: 0.5rem;
                 }
@@ -227,14 +231,14 @@ export default function Login() {
                     display: flex;
                     flex-direction: column;
                     position: relative;
-                    justify-content: center;
+                    overflow: hidden;
                 }
                 .form-container {
                     flex: 1;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 2rem;
+                    padding: 1.5rem;
                     overflow-y: auto;
                 }
                 .login-card {
@@ -244,17 +248,17 @@ export default function Login() {
                     border-radius: 16px;
                     box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
                     border: 1px solid rgba(0,0,0,0.05);
-                    padding: 3rem 2.5rem;
+                    padding: 2rem 2.5rem;
                 }
                 .login-icon-wrap {
-                    width: 56px;
-                    height: 56px;
+                    width: 48px;
+                    height: 48px;
                     background: #eef2ff;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin: 0 auto 1.5rem;
+                    margin: 0 auto 1rem;
                     color: #4f46e5;
                 }
                 .login-title {
@@ -268,10 +272,10 @@ export default function Login() {
                     text-align: center;
                     color: #64748b;
                     font-size: 0.95rem;
-                    margin: 0 0 2.5rem 0;
+                    margin: 0 0 1.5rem 0;
                 }
                 .form-group {
-                    margin-bottom: 1.5rem;
+                    margin-bottom: 1rem;
                 }
                 .form-label {
                     display: flex;
@@ -330,7 +334,7 @@ export default function Login() {
                     display: flex;
                     align-items: center;
                     gap: 0.5rem;
-                    margin-bottom: 2rem;
+                    margin-bottom: 1.25rem;
                 }
                 .remember-wrap input[type="checkbox"] {
                     width: 16px;
@@ -360,7 +364,7 @@ export default function Login() {
                 }
                 .help-link {
                     text-align: center;
-                    margin-top: 1.5rem;
+                    margin-top: 1rem;
                     font-size: 0.875rem;
                     color: #64748b;
                 }
@@ -395,14 +399,16 @@ export default function Login() {
                 @media (max-width: 992px) {
                     .split-layout {
                         flex-direction: column;
+                        height: auto;
+                        max-height: none;
+                        overflow: auto;
                     }
                     .split-left {
                         flex: none;
-                        min-height: 100vh;
+                        min-height: 60vh;
                     }
                     .split-right {
                         flex: none;
-                        min-height: 100vh;
                     }
                 }
                 @media (max-width: 480px) {
