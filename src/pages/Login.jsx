@@ -12,6 +12,7 @@ export default function Login() {
     const [error, setError] = useState('');
     const [notices, setNotices] = useState([]);
     const [selectedNotice, setSelectedNotice] = useState(null);
+    const [showAllNotices, setShowAllNotices] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -154,7 +155,14 @@ export default function Login() {
                     display: flex;
                     flex-direction: column;
                     gap: 1.25rem;
+                    max-height: 350px;
+                    overflow-y: auto;
+                    padding-right: 0.5rem;
                 }
+                /* Custom scrollbar for notice-list */
+                .notice-list::-webkit-scrollbar { width: 4px; }
+                .notice-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+                .notice-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
                 .notice-row {
                     display: flex;
                     gap: 1.5rem;
@@ -450,7 +458,7 @@ export default function Login() {
                                     {notices.length === 0 ? (
                                         <p style={{ color: 'rgba(255,255,255,0.7)' }}>No notices available.</p>
                                     ) : (
-                                        notices.slice(0, 3).map((notice, idx) => {
+                                        notices.slice(0, showAllNotices ? notices.length : 3).map((notice, idx) => {
                                             // Mock parsing date to Day/Month for UI
                                             const d = new Date(notice.date || notice.timestamp || Date.now());
                                             const day = d.getDate();
@@ -476,12 +484,11 @@ export default function Login() {
                                         })
                                     )}
                                 </div>
-                                <div className="view-all" onClick={() => {
-                                    // Normally would link to a dedicated notices page or open modal
-                                    toast('Please login to view all notices', { icon: '🔔' });
-                                }}>
-                                    View All Notices <ArrowRight size={16} />
-                                </div>
+                                {!showAllNotices && notices.length > 3 && (
+                                    <div className="view-all" onClick={() => setShowAllNotices(true)}>
+                                        View All Notices <ArrowRight size={16} />
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>
