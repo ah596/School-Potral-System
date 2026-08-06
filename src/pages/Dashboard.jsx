@@ -182,7 +182,7 @@ export default function Dashboard() {
                                     🎓 Student
                                 </span>
                                 <h1 style={{ color: 'white', fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-                                    {greeting}, {user.name.split(' ')[0]}!
+                                    {greeting}, {(user.name || 'Student').split(' ')[0]}!
                                 </h1>
                                 <div className="user-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.6rem' }}>
                                     <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
