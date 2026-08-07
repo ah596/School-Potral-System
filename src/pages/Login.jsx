@@ -287,9 +287,9 @@ export default function Login() {
                     transition: all 0.2s;
                 }
                 .input-wrap:focus-within {
-                    border-color: #4f46e5;
-                    background: white;
-                    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+                    border-color: #e2e8f0;
+                    background: #f8fafc;
+                    box-shadow: none;
                 }
                 .input-icon {
                     color: #94a3b8;
@@ -309,6 +309,13 @@ export default function Login() {
                 }
                 .login-input:-webkit-autofill {
                     -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset;
+                }
+                .split-layout input:focus {
+                    outline: none !important;
+                    box-shadow: none !important;
+                }
+                .split-layout input {
+                    outline: none !important;
                 }
                 .input-action {
                     background: none;
@@ -393,7 +400,7 @@ export default function Login() {
             <div className="split-left">
                 <div className="left-overlay"></div>
                 <div className="left-content">
-                    
+
                     <div className="welcome-section">
                         <h1 className="welcome-title">Welcome to your Digital Campus.</h1>
                         <p className="welcome-subtitle">
@@ -431,7 +438,7 @@ export default function Login() {
                                     <h3><Bell size={20} /> Notice Board</h3>
                                     <span className="new-badge">{notices.length} New</span>
                                 </div>
-                                
+
                                 <div className="notice-list">
                                     {notices.length === 0 ? (
                                         <p style={{ color: 'rgba(255,255,255,0.7)' }}>No notices available.</p>
@@ -481,7 +488,7 @@ export default function Login() {
                             <h2 className="login-title" style={{ margin: 0 }}>Sign In</h2>
                         </div>
                         <p className="login-subtitle">Enter your credentials to access the portal</p>
-                        
+
                         {error && (
                             <div style={{
                                 background: '#fee2e2', color: '#ef4444',
@@ -495,37 +502,37 @@ export default function Login() {
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label className="form-label">User ID or Email</label>
-                                <div style={{display:'flex',alignItems:'center',border:'1px solid #e2e8f0',borderRadius:'8px',background:'#f8fafc',padding:'0 1rem',gap:'0.75rem'}}>
-                                    <User size={18} style={{color:'#94a3b8',flexShrink:0}} />
-                                    <input 
+                                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc', padding: '0 1rem', gap: '0.75rem' }}>
+                                    <User size={18} style={{ color: '#94a3b8', flexShrink: 0 }} />
+                                    <input
                                         type="text"
-                                        style={{flex:1,padding:'0.875rem 0',border:'none',outline:'none',fontSize:'0.95rem',background:'transparent',color:'#1e293b'}}
-                                        placeholder="e.g. student@school.edu" 
+                                        style={{ flex: 1, padding: '0.875rem 0', border: 'none', outline: 'none', boxShadow: 'none', fontSize: '0.95rem', background: 'transparent', color: '#1e293b' }}
+                                        placeholder="e.g. student@school.edu"
                                         value={id}
                                         onChange={(e) => setId(e.target.value)}
                                         required
                                     />
                                 </div>
                             </div>
-                            
+
                             <div className="form-group">
                                 <div className="form-label">
                                     <span>Password</span>
                                     <a href="#" style={{ color: '#4f46e5', textDecoration: 'none', fontSize: '0.8rem' }} onClick={(e) => { e.preventDefault(); toast('Password reset link sent to your admin.'); }}>Forgot Password?</a>
                                 </div>
-                                <div style={{display:'flex',alignItems:'center',border:'1px solid #e2e8f0',borderRadius:'8px',background:'#f8fafc',padding:'0 1rem',gap:'0.75rem'}}>
-                                    <Lock size={18} style={{color:'#94a3b8',flexShrink:0}} />
-                                    <input 
+                                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc', padding: '0 1rem', gap: '0.75rem' }}>
+                                    <Lock size={18} style={{ color: '#94a3b8', flexShrink: 0 }} />
+                                    <input
                                         type={showPassword ? "text" : "password"}
-                                        style={{flex:1,padding:'0.875rem 0',border:'none',outline:'none',fontSize:'0.95rem',background:'transparent',color:'#1e293b'}}
-                                        placeholder="••••••••" 
+                                        style={{ flex: 1, padding: '0.875rem 0', border: 'none', outline: 'none', fontSize: '0.95rem', background: 'transparent', color: '#1e293b' }}
+                                        placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
                                     />
-                                    <button 
+                                    <button
                                         type="button"
-                                        style={{background:'none',border:'none',color:'#94a3b8',cursor:'pointer',padding:0,display:'flex',flexShrink:0}}
+                                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
